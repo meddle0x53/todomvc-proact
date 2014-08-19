@@ -1,0 +1,9 @@
+{
+	"name": "todomvc-proact",
+	"version": "0.0.0",
+  "authors": ["meddle0x53 <n.tzvetinov@gmail.com>"],
+	"dependencies": {
+		"todomvc-common": "~0.1.4",
+    "proact.js": "~1.0.0"
+	}
+}
