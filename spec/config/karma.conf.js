@@ -4,6 +4,8 @@ module.exports = function(karma) {
     frameworks: ['jasmine'],
 
     files: [
+      'bower_components/todomvc-common/base.js',
+      'bower_components/proact.js/dist/js/proact.js',
       'js/**/*.js',
       'spec/spec_helper.js',
       'spec/unit/**/*.spec.js'
