@@ -18,14 +18,6 @@ describe('ProAct.Models', function () {
 
       expect(ProAct.Utils.isProObject(models[0])).toBe(true);
       expect(models[0].c).toBe(3);
-
-      var s = new ProAct.Stream();
-
-      models.p().into(s);
-
-      s.trigger('bau');
-
-      console.log(models.length)
     });
   });
 });

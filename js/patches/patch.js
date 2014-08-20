@@ -34,8 +34,26 @@
         } else {
           pArrayProto.push.apply(self, nvs);
         }
+      } else if (op === operations.remove) {
+        if (ind === 0) {
+          self.shift();
+        } else {
+          self.pop();
+        }
+      } else if (op === operations.setLength) {
+        self.length = nv;
+      } else if (op === operations.reverse) {
+        self.reverse();
+      } else if (op === operations.sort) {
+        if (ProAct.Utils.isFunction(nv)) {
+          self.sort(nv);
+        } else {
+          self.sort();
+        }
+      } else if (op === operations.splice) {
+        nvs = slice.call(nv, 0);
+        pArrayProto.splice.apply(self, [ind, ov.length].concat(nvs));
       }
-
     };
   };
 
