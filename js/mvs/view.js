@@ -22,10 +22,7 @@
     constructor: ProAct.View,
 
     initialize: function (data) {
-      ProAct.Utils.ex(this, data, {}, {
-        $el: 'noprop',
-        model: 'noprop'
-      });
+      ProAct.Utils.ex(this, data);
 
       if (!this.id) {
         this.id = 'proact-view-' + ProAct.View.idNumber;
@@ -35,7 +32,10 @@
 
     bindModel: function (model) {
       if (!this.model) {
-        ProAct.proxy(model, this);
+        ProAct.proxy(this, model, {
+          $el: 'noprop',
+          model: 'noprop'
+        }, {});
 
         this.model = model;
       }
@@ -49,16 +49,49 @@
           this.$el = $(this.el + '#' + this.id);
         }
 
-        if (!this.$el && this.$el.length === 0) {
+        if (!this.$el || this.$el.length === 0) {
           this.$el = $('[pro-view=' + this.type + ']')
         }
 
-        if (!this.$el && this.$el.length === 0) {
+        if (!this.$el || this.$el.length === 0) {
           return;
         }
 
-        $el = $el.first();
+        this.$el = this.$el.first();
       }
+
+      var view = this,
+          $bindings = this.$el.find('[pro-bind]');
+
+      $bindings.each(function () {
+        var $binding = $(this),
+            property = $binding.attr('pro-bind'),
+            updating = false;
+
+        // ->
+        view.p(property).on(function () {
+          if (updating) {
+            return;
+          }
+
+          if ($binding.attr('type') === 'checkbox') {
+            $binding.prop('checked', view[property]);
+          }
+        });
+
+        $binding.on('change', function () {
+          try {
+            updating = true;
+            if ($binding.attr('type') === 'checkbox') {
+              view[property] = $binding.prop('checked');
+            }
+          } finally {
+            updating = false;
+          }
+        });
+
+
+      });
 
       // rendering logic here!
     }

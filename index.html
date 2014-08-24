@@ -29,9 +29,9 @@
 						</div>
 						<input class="edit" value="Create a TodoMVC template">
 					</li>
-					<li>
+					<li id='test'>
 						<div class="view">
-							<input class="toggle" type="checkbox">
+							<input class="toggle" type="checkbox" pro-bind="done">
 							<label>Rule the web</label>
 							<button class="destroy"></button>
 						</div>
@@ -70,6 +70,13 @@
 		<!-- Scripts here. Don't remove this ↓ -->
 		<script src="bower_components/todomvc-common/base.js"></script>
 		<script src="bower_components/proact.js/dist/js/proact.js"></script>
+		<script src="bower_components/zepto/zepto.js"></script>
+		<script src="js/patches/patch.js"></script>
+		<script src="js/mvs/initialize.js"></script>
+		<script src="js/mvs/storage.js"></script>
+		<script src="js/mvs/model.js"></script>
+		<script src="js/mvs/models.js"></script>
+		<script src="js/mvs/view.js"></script>
 		<script src="js/app.js"></script>
 	</body>
 </html>
