@@ -1,5 +1,5 @@
 (function( window, ProAct ) {
-	'use strict';
+  'use strict';
 
   ProAct.Model = ProAct.Model || function (data, storage) {
     ProAct.Utils.ex(this, this.constructor.initData);
@@ -21,20 +21,7 @@
     return instance;
   };
 
-  ProAct.Model.extend = function (data) {
-    var parent = this,
-        child = function () {
-          parent.apply(this, Array.prototype.slice.call(arguments));
-        };
-
-    ProAct.Utils.ex(child, parent);
-    ProAct.Utils.ex(child.prototype, parent.prototype);
-    ProAct.Utils.ex(child.initData, data);
-    child.uuid = ProAct.Utils.uuid();
-    child.prototype.constructor = child;
-
-    return child;
-  };
+  ProAct.Model.extend = ProAct.Utils.extendClass;
 
   ProAct.Model.prototype = {
     constructor: ProAct.Model,
@@ -43,9 +30,6 @@
       ProAct.prob(this);
 
       this.storage = storage;
-
-      if (this.storage) {
-      }
     },
 
     save: function () {

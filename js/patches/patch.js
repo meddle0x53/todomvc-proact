@@ -9,6 +9,22 @@
     });
   };
 
+  ProAct.Utils.extendClass = function (data) {
+    var parent = this,
+        child = function () {
+          parent.apply(this, Array.prototype.slice.call(arguments));
+        };
+
+    ProAct.Utils.ex(child, parent);
+    ProAct.Utils.ex(child.prototype, parent.prototype);
+    ProAct.Utils.ex(child.initData, data);
+
+    child.uuid = ProAct.Utils.uuid();
+    child.prototype.constructor = child;
+
+    return child;
+  };
+
   ProAct.ArrayCore.prototype.makeListener = function () {
     var self = this.shell;
     return function (event) {
