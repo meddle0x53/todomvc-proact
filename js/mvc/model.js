@@ -45,6 +45,14 @@
 
       if (this.storage) {
       }
+    },
+
+    save: function () {
+      if (!this.isSaved) {
+        return this.storage.create(this);
+      }
+
+      return this.storage.update(this);
     }
   };
 

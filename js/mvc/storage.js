@@ -6,8 +6,8 @@
   ProAct.Storage.prototype = {
     constructor: ProAct.Storage,
 
-    create: function (model) {},
-    update: function (model) {},
+    create: function (model) { return model; },
+    update: function (model) { return model; },
     read: function (uuid, query) {},
     del: function (model) {},
 
@@ -31,6 +31,7 @@
           storage = this.register(uuid);
 
       storage.push(model);
+      model.isSaved = true;
 
       return model;
     },
