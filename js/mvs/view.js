@@ -21,7 +21,10 @@
     constructor: ProAct.View,
 
     initialize: function (data) {
-      ProAct.Utils.ex(this, data);
+      ProAct.Utils.ex(this, data, {}, {
+        $el: 'noprop',
+        model: 'noprop'
+      });
 
       if (!this.id) {
         this.id = 'proact-view-' + ProAct.View.idNumber;
@@ -30,7 +33,17 @@
     },
 
     bindModel: function (model) {
-      ProAct.proxy(model, this);
+      if (!this.model) {
+        ProAct.proxy(model, this);
+
+        this.model = model;
+      }
+    },
+
+    render: function (model) {
+      this.bindModel(model);
+
+      // rendering logic here!
     }
   };
 
