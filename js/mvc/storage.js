@@ -26,7 +26,21 @@
   ProAct.MemStorage.prototype = ProAct.Utils.ex(Object.create(ProAct.Storage.prototype), {
     constructor: ProAct.MemStorage,
 
+    create: function (model) {
+      var uuid = model.constructor.uuid,
+          storage = this.register(uuid);
+
+      storage.push(model);
+
+      return model;
+    },
+
     register: function (uuid, data) {
+      if (!this.store[uuid]) {
+        this.store[uuid] = [];
+      }
+
+      return this.store[uuid];
     }
   });
 
