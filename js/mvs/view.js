@@ -10,7 +10,8 @@
     el: 'div',
     $el: null,
     id: null,
-    classes: []
+    classes: [],
+    type: 'view'
   };
 
   ProAct.View.idNumber = 1;
@@ -42,6 +43,22 @@
 
     render: function (model) {
       this.bindModel(model);
+
+      if (!this.$el) {
+        if (this.id) {
+          this.$el = $(this.el + '#' + this.id);
+        }
+
+        if (!this.$el && this.$el.length === 0) {
+          this.$el = $('[pro-view=' + this.type + ']')
+        }
+
+        if (!this.$el && this.$el.length === 0) {
+          return;
+        }
+
+        $el = $el.first();
+      }
 
       // rendering logic here!
     }

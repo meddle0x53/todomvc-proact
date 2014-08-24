@@ -1,6 +1,6 @@
 //Patches that were needed by the mvc implementation that should be added to the next major version of ProAct.js
 (function( window, ProAct ) {
-	'use strict';
+  'use strict';
 
   ProAct.Utils.uuid = function () {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -82,5 +82,3 @@
 
 
 })( window, ProAct );
-
-
