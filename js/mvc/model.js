@@ -31,6 +31,7 @@
     ProAct.Utils.ex(child.prototype, parent.prototype);
     ProAct.Utils.ex(child.initData, data);
     child.uuid = ProAct.Utils.uuid();
+    child.prototype.constructor = child;
 
     return child;
   };
@@ -53,6 +54,10 @@
       }
 
       return this.storage.update(this);
+    },
+
+    destroy: function () {
+      return this.storage.destroy(this);
     }
   };
 

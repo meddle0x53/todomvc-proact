@@ -9,10 +9,7 @@
     create: function (model) { return model; },
     update: function (model) { return model; },
     read: function (uuid, query) {},
-    del: function (model) {},
-
-    reload: function (uuid) {},
-    save: function (models) {},
+    destroy: function (model) { return model; },
 
     register: function (uuid, data) {}
   };
@@ -34,6 +31,22 @@
       model.isSaved = true;
 
       return model;
+    },
+
+    destroy: function (model) {
+      var uuid = model.constructor.uuid,
+          storage = this.register(uuid);
+
+      ProAct.Utils.remove(storage, model);
+      model.isSaved = false;
+
+      return model;
+    },
+
+    read: function (uuid, query) {
+      var storage = this.register(uuid);
+
+      return [].concat(storage);
     },
 
     register: function (uuid, data) {

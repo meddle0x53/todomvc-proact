@@ -13,7 +13,7 @@
 
     ProAct.Array.apply(this, initial);
 
-    this.addListenr(function (event) {
+    this.storageListener = function (event) {
       var op    = event.args[0],
           ind   = event.args[1],
           ov    = event.args[2],
@@ -27,7 +27,7 @@
         nvs = slice.call(nv, 0);
         ln = nvs.length;
 
-        for (i = 0; i < ln, i++) {
+        for (i = 0; i < ln; i++) {
           nvs[i].save();
         }
       } else if (op === operations.remove) {
@@ -38,22 +38,37 @@
         nvs = slice.call(nv, 0);
         ln = nvs.length;
 
-        for (i = 0; i < ln, i++) {
+        for (i = 0; i < ln; i++) {
           nvs[i].save();
         }
 
         ovs = slice.call(ov, 0);
         ln = ovs.length;
 
-        for (i = 0; i < ln, i++) {
+        for (i = 0; i < ln; i++) {
           ovs[i].destroy();
         }
       }
-    });
+    };
+
+    this.core.on(this.storageListener);
   };
 
   Models.prototype = ProAct.Utils.ex(Object.create(ProAct.Array.prototype), {
-    constructor: Models
+    constructor: Models,
+    load: function(query) {
+      if (this._array.length > 0) {
+        try {
+          this.core.off(this.storageListener);
+
+          this.splice(0, this._array.length, this.storage.read(this.type.uuid, query));
+        } finally {
+          this.core.on(this.storageListener);
+        }
+      } else {
+        ProAct.Array.prototype.push.apply(this, this.storage.read(this.type.uuid, query));
+      }
+    }
   });
 
   ProAct.Models.create = function (type, storage) {
