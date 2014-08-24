@@ -19,6 +19,7 @@
           ov    = event.args[2],
           nv    = event.args[3],
           ovs, nvs, i, ln,
+          slice = Array.prototype.slice,
           operations = ProAct.Array.Operations;
 
       if (op === operations.set) {

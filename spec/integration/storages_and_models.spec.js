@@ -43,8 +43,27 @@ describe('ProAct.Storage, ProAct.Model and ProAct.Models', function () {
 
       tasks.load();
       expect(tasks.length).toBe(1);
-
       expect(tasks[0]).toBe(task);
+    });
+
+    it ('Adding a model to a ProAct.Models collection updates the storage with it', function () {
+      var task = Task.create({
+            description: 'Feed Dally.'
+          }, storage),
+          tasks = ProAct.Models.create(Task, storage),
+          tasks2 = ProAct.Models.create(Task, storage);
+
+      expect(tasks.length).toBe(0);
+
+      tasks.push(task);
+
+      expect(tasks.length).toBe(1);
+      expect(tasks[0]).toBe(task);
+      expect(task.isSaved).toBe(true);
+
+      tasks2.load();
+      expect(tasks2.length).toBe(1);
+      expect(tasks2[0]).toBe(task);
     });
   });
 });
