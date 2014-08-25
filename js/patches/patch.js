@@ -25,6 +25,25 @@
     return child;
   };
 
+  ProAct.Event.make = function (source, target, type, data) {
+    if (type === 'array' || type === ProAct.Event.Types.array) {
+      return ProAct.Event.makeArray(data[0], data.slice(1));
+    }
+  };
+
+  ProAct.Event.makeArray = function (source, target, type, data) {
+    var eventType = ProAct.Event.Types.array;
+    if (type === 'remove' || type === ProAct.Array.Operations.remove) {
+      return new ProAct.Event(source, target, eventType, ProAct.Array.Operations.remove, data[0], data[1], data[2]);
+    }
+  };
+
+  ProAct.Event.simple = function (eventType, subType, value) {
+    if ((eventType === 'array' || eventType === 'a') && (subType === 'pop' || subType === 'shift')) {
+      return ProAct.Event.makeArray(null, null, 'remove', [subType === 'shift' ? 0 : 1]);
+    }
+  };
+
   ProAct.ArrayCore.prototype.makeListener = function () {
     var self = this.shell;
     return function (event) {
@@ -78,6 +97,18 @@
         pArrayProto.splice.apply(self, [ind, ov.length].concat(nvs));
       }
     };
+  };
+
+  ProAct.DSL.predefined.mapping.pop = function () {
+    return ProAct.Event.simple('array', 'pop');
+  };
+
+  ProAct.DSL.predefined.mapping.shift = function () {
+    return ProAct.Event.simple('array', 'shift');
+  };
+
+  ProAct.DSL.predefined.mapping.eventToVal = function (event) {
+    return event.args[0][event.target];
   };
 
 
