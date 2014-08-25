@@ -22,5 +22,9 @@
     }
   });
 
+  P.flow.errStream().onErr(function (e) {
+    throw e;
+  })
+
 });
 
