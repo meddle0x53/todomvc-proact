@@ -32,10 +32,10 @@
 					<li id='test'>
 						<div class="view">
 							<input class="toggle" type="checkbox" pro-bind="done">
-							<label>Rule the web</label>
+							<label class='description' pro-bind='description'>Rule the web</label>
 							<button class="destroy"></button>
 						</div>
-						<input class="edit" value="Rule the web">
+						<input class="edit" value="Rule the web" pro-bind="one-way:description">
 					</li>
 				</ul>
 			</section>
