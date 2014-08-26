@@ -32,22 +32,49 @@
   };
 
   ProAct.Event.makeArray = function (source, target, type, data) {
-    var eventType = ProAct.Event.Types.array;
+    var eventType = ProAct.Event.Types.array, arr;
     if (type === 'remove' || type === ProAct.Array.Operations.remove) {
       return new ProAct.Event(source, target, eventType, ProAct.Array.Operations.remove, data[0], data[1], data[2]);
     }
+
+    if (type === 'splice' || type === ProAct.Array.Operations.splice) {
+      if (!ProAct.Utils.isArray(data[1])) {
+        data[1] = new Array(data[1]);
+      }
+
+      return new ProAct.Event(source, target, eventType, ProAct.Array.Operations.splice, data[0], data[1], data[2]);
+    }
   };
 
-  ProAct.Event.simple = function (eventType, subType, value) {
+  ProAct.Event.simple = function (eventType, subType, value, array) {
     if ((eventType === 'array' || eventType === 'a') && (subType === 'pop' || subType === 'shift')) {
       return ProAct.Event.makeArray(null, null, 'remove', [subType === 'shift' ? 0 : 1]);
     }
+
+    if ((eventType === 'array' || eventType === 'a') && (subType === 'splice')) {
+      return ProAct.Event.makeArray(null, null, 'splice', [value, 1]);
+    }
+
+    if ((eventType === 'array' || eventType === 'a') && (subType === 'deleteElement' || subType === 'del')) {
+      if (array) {
+        var index = array.indexOf(value);
+
+        if (index !== -1) {
+          return ProAct.Event.makeArray(null, array, 'splice', [index, 1]);
+        }
+      } else {
+        return ProAct.Event.makeArray(null, array, 'splice', [null, [value]]);
+      }
+    }
+
+    return null;
   };
+
 
   ProAct.ArrayCore.prototype.makeListener = function () {
     var self = this.shell;
     return function (event) {
-      if (!(event instanceof ProAct.Event)) {
+      if (!event || !(event instanceof ProAct.Event)) {
         self.push(event);
 
         return;
@@ -65,6 +92,7 @@
           nv    = event.args[3],
           pArrayProto = ProAct.Array.prototype,
           nvs,
+          slice = Array.prototype.slice,
           operations = ProAct.Array.Operations;
 
       if (op === operations.set) {
@@ -94,6 +122,12 @@
         }
       } else if (op === operations.splice) {
         nvs = slice.call(nv, 0);
+        if (ind === null || ind === undefined) {
+          ind = self.indexOf(ov[0]);
+          if (ind === -1) {
+            return;
+          }
+        }
         pArrayProto.splice.apply(self, [ind, ov.length].concat(nvs));
       }
     };
