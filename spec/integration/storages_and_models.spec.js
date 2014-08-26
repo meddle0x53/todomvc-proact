@@ -65,6 +65,23 @@ describe('ProAct.Storage, ProAct.Model and ProAct.Models', function () {
       expect(tasks2.length).toBe(1);
       expect(tasks2[0]).toBe(task);
     });
+
+    it ('Destroying a model contained in a collection removes it from the collection', function () {
+      var task = Task.create({
+            description: 'Feed Dally.'
+          }, storage),
+          tasks = ProAct.Models.create(Task, storage);
+
+      expect(tasks.length).toBe(0);
+
+      task.save();
+
+      tasks.load();
+      expect(tasks.length).toBe(1);
+
+      task.destroy();
+      expect(tasks.length).toBe(0);
+    });
   });
 });
 

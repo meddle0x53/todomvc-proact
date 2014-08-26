@@ -5,7 +5,7 @@ module.exports = function(karma) {
 
     files: [
       'bower_components/todomvc-common/base.js',
-      'bower_components/proact.js/dist/js/proact.js',
+      'js/lib/proact.js',
       'bower_components/zepto/zepto.js',
       'js/patches/patch.js',
       'js/mvs/initialize.js',
