@@ -26,12 +26,12 @@
       editing: function () {
         return 'editing';
       },
-      complete: function (event) {
-        if (event.proView.done) {
+      complete: function (val) {
+        if (val) {
           return 'completed';
         }
 
-        return ProAct.Event.simple('array', 'pop')
+        return ProAct.Event.simple('array', 'pop');
       },
       onEnter: function (event) {
         return event.keyCode === 13;
@@ -49,22 +49,24 @@
           ['filter(l:onEnter)|map(pop)|>>($1)', 'classes'],
           ['filter(l:onEnter)|map(l:val)|>>($1)', 'description']
         ]
-      },
-      //'input.toggle': {
-      //  click: ['map(l:complete)|>>($1)', 'classes']
-      //}
-    }
+      }
+    },
+    pipes: [
+      ['done', 'map(eventToVal)|map(l:complete)', 'classes']
+    ]
   });
+
+  app.storage = new ProAct.MemStorage();
 
   app.model = app.Task.create({
     done: false,
     description: 'Feed Dally with 60ml milk.'
-  });
+  }, app.storage);
 
   app.model2 = app.Task.create({
     done: true,
     description: 'Return to tanya'
-  });
+  }, app.storage);
 
   app.view = new app.View();
   app.view.render(app.model);
