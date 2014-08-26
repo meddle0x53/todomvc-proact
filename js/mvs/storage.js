@@ -1,18 +1,37 @@
 (function( window, ProAct ) {
 	'use strict';
 
-  ProAct.Storage = ProAct.Storage || function () {};
+  ProAct.Storage = ProAct.Storage || function () {
+    ProAct.Observable.call(this);
+  };
+  ProAct.Storage.currentCaller = null;
 
-  ProAct.Storage.prototype = {
+  ProAct.Storage.prototype = ProAct.Utils.ex(Object.create(ProAct.Observable.prototype), {
     constructor: ProAct.Storage,
 
-    create: function (model) { return model; },
-    update: function (model) { return model; },
-    read: function (uuid, query) {},
-    destroy: function (model) { return model; },
+    makeEvent: function (e) {
+      return e;
+    },
+
+    create: function (model) {
+      this.update(model, [model.constructor.uuid]);
+
+      return model;
+    },
+    save: function (model) { return model; },
+    read: function (uuid, query) {
+      if (ProAct.Storage.currentCaller) {
+        this.on(uuid, ProAct.Storage.currentCaller);
+      }
+    },
+    destroy: function (model) {
+      this.update(ProAct.Event.simple('array', 'del', model), [model.constructor.uuid]);
+
+      return model;
+    },
 
     register: function (uuid, data) {}
-  };
+  });
 
   ProAct.MemStorage = ProAct.MemStorage || function () {
     ProAct.Storage.call(this);
@@ -30,7 +49,7 @@
       storage.push(model);
       model.isSaved = true;
 
-      return model;
+      return ProAct.Storage.prototype.create.call(this, model);
     },
 
     destroy: function (model) {
@@ -40,10 +59,12 @@
       ProAct.Utils.remove(storage, model);
       model.isSaved = false;
 
-      return model;
+      return ProAct.Storage.prototype.destroy.call(this, model);
     },
 
     read: function (uuid, query) {
+      ProAct.Storage.prototype.read.call(this, uuid, query);
+
       var storage = this.register(uuid);
 
       return [].concat(storage);

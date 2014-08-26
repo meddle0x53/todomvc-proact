@@ -13,6 +13,7 @@
 
     ProAct.Array.apply(this, initial);
 
+
     this.storageListener = function (event) {
       var op    = event.args[0],
           ind   = event.args[1],
@@ -57,7 +58,22 @@
 
   Models.prototype = ProAct.Utils.ex(Object.create(ProAct.Array.prototype), {
     constructor: Models,
+
+    makeModelListener: function () {
+      if (!this.modelListener) {
+        var self = this, listener = this.core.makeListener();
+        this.modelListener = function () {
+          self.core.off(self.storageListener);
+          listener.apply(null, arguments);
+          self.core.on(self.storageListener);
+        };
+      }
+
+      return this.modelListener;
+    },
+
     load: function(query) {
+      ProAct.Storage.currentCaller = this.makeModelListener();
       if (this._array.length > 0) {
         try {
           this.core.off(this.storageListener);
@@ -69,6 +85,7 @@
       } else {
         ProAct.Array.prototype.push.apply(this, this.storage.read(this.type.uuid, query));
       }
+      ProAct.Storage.currentCaller = null;
     }
   });
 

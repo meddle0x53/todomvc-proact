@@ -6,7 +6,17 @@
     this.initialize(data, storage);
   };
 
-  ProAct.Model.initData = {};
+  ProAct.Model.initData = {
+    isDestroyed: false,
+    isSaved: false,
+    syncDestroy: function () {
+      if (this.isDestroyed) {
+        return this.destroy();
+      }
+
+      return this.isDestroyed;
+    }
+  };
 
   ProAct.Model.create = function (data, storage) {
     var Const = function () {},
@@ -30,6 +40,8 @@
       ProAct.prob(this);
 
       this.storage = storage;
+
+      this.syncDestroy;
     },
 
     save: function () {
