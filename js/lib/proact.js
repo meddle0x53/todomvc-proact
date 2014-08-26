@@ -3447,8 +3447,9 @@
 	            newVal = newVal.args[0][newVal.target];
 	          }
 	
-	          self.oldVal = self.val;
-	          self.val = P.Observable.transform(self, newVal);
+            self.set(newVal);
+	          //self.oldVal = self.val;
+	          //self.val = P.Observable.transform(self, newVal);
 	        }
 	      };
 	    }
@@ -4154,7 +4155,8 @@
 	      return;
 	    }
 	
-	    self.update();
+      // PATCH
+	    target.update();
 	  };
 	
 	  P.P.call(this, proObject, property, getter, setter);
@@ -8299,27 +8301,14 @@
 	          if (!actionObject || !actionObject[name]) {
 	            return object;
 	          }
-            var args, i, ln;
+            var args;
 	
-            // PATCH
-            if (P.U.isArray(actionObject[name][0])) {
-              ln = actionObject[name].length;
-              for (i = 0; i < ln; i++) {
-                args = actionObject[name][i];
-                if (!P.U.isArray(args)) {
-                  args = [args];
-                }
-
-                object[name].apply(object, args);
-              }
-            } else {
-              args = actionObject[name];
-              if (!P.U.isArray(args)) {
-                args = [args];
-              }
-
-              return object[name].apply(object, args);
+            args = actionObject[name];
+            if (!P.U.isArray(args)) {
+              args = [args];
             }
+
+            return object[name].apply(object, args);
 	        }
 	      };
 	    }
@@ -8935,7 +8924,8 @@
 	  run: function (observable, options, registry) {
 	    var isS = P.U.isString,
 	        args = slice.call(arguments, 3),
-	        option, i, ln, opType;
+	        option, i, ln, opType, oldOption,
+          multiple = {};
 	
 	    if (options && isS(options)) {
 	      options = dsl.optionsFromString.apply(null, [options].concat(args));
@@ -8945,17 +8935,35 @@
 	      options = {into: options};
 	    }
 	
+      // PATCH
 	    if (options && options.order) {
 	      ln = options.order.length;
 	      for (i = 0; i < ln; i++) {
 	        option = options.order[i];
 	        if (opType = dslOps[option]) {
 	          if (registry) {
+              if (options.order.indexOf(option) !== options.order.lastIndexOf(option)) {
+                if (multiple[option] === undefined) {
+                  multiple[option] = -1;
+                }
+                multiple[option] = multiple[option] + 1;
+                oldOption = options[option];
+                options[option] = options[option][multiple[option]];
+              }
 	            options[option] = registry.toObjectArray(options[option]);
 	          }
 	
 	          opType.action(observable, options);
-	          delete options[option];
+            if (oldOption) {
+              options[option] = oldOption;
+              oldOption = undefined;
+
+              if (multiple[option] >= options[option].length - 1) {
+                delete options[option];
+              }
+            } else {
+              delete options[option];
+            }
 	        }
 	      }
 	    }
