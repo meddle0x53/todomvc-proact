@@ -13,6 +13,7 @@
     classes: [],
     type: 'view',
     streams: {},
+    pipes: [],
     lambdas: {},
     $parent: null,
     parentView: null,
@@ -58,6 +59,7 @@
           $parent: 'noprop',
           model: 'noprop',
           streams: 'noprop',
+          pipes: 'noprop',
           lambdas: 'noprop',
           registry: 'noprop',
           template: 'noprop',
@@ -98,8 +100,11 @@
       var view = this,
           $bindings = this.$el.find('[pro-bind]'),
           streams = this.streams,
+          pipes = this.pipes,
           streamPath, action, $actionEl,
-          streamData, i, ln;
+          pipeData, pipeStreamData, pipeDataLn, pipeArgs,
+          streamData, prop,
+          p, i, ln;
 
       this.classes.core.on(function (event) {
         var op    = event.args[0],
@@ -192,11 +197,33 @@
           if (ProAct.Utils.isArray(streamData[0])) {
             ln = streamData.length;
             for (i = 0; i < ln; i++) {
-              this.setupStream.apply(this, [$actionEl, action].concat(streamData[i]));
+              this.setupActionStream.apply(this, [$actionEl, action].concat(streamData[i]));
             }
           } else {
-            this.setupStream.apply(this, [$actionEl, action].concat(streamData));
+            this.setupActionStream.apply(this, [$actionEl, action].concat(streamData));
           }
+        }
+      }
+
+      ln = pipes.length;
+      for (i = 0; i < ln; i++) {
+        pipeData = pipes[i];
+        pipeDataLn = pipeData.length;
+
+        if (pipeDataLn > 2) {
+          p = pipeDataLn - 3;
+
+          pipeStreamData = pipeData[1] + '|<<($' + (p + 1) + ')|>>($' + (p + 2) + ')';
+          pipeArgs = pipeData.slice(3);
+
+          prop = this.propFromPath(pipeData[0]);
+          pipeArgs.push(prop);
+          pipeArgs.push(this.propFromPath(pipeData[2]));
+
+          this.setupStream.apply(this, [pipeStreamData].concat(pipeArgs));
+
+          // sync
+          prop.update(prop.makeEvent());
         }
       }
 
@@ -210,29 +237,42 @@
     afterRender: function ($el) {
     },
 
-    setupStream: function ($actionEl, action, streamData, propertyName) {
-      var streamArgs = ['s:' + ProAct.Utils.uuid(), streamData],
-          view = this,
-          args = Array.prototype.slice.call(arguments, 2),
-          prop, stream;
+    propFromPath: function (path) {
+      var prop = this.p(path);
 
-      if (propertyName) {
-        prop = this.p(propertyName);
-        if (prop.type() === ProAct.Property.Types.array) {
-          prop = prop.get().core;
+      if (prop.type() === ProAct.Property.Types.array) {
+        prop = prop.get().core;
 
-        }
-
-        if (prop.target) {
-          prop = prop.target;
-        }
-        streamArgs.push(prop);
       }
+
+      if (prop.target) {
+        prop = prop.target;
+      }
+
+      return prop;
+    },
+
+    setupStream: function (streamData) {
+      var streamArgs = ['s:' + ProAct.Utils.uuid(), streamData],
+          args = Array.prototype.slice.call(arguments, 1);
 
       if (args.length) {
         streamArgs = streamArgs.concat(args);
       }
-      stream = this.registry.make.apply(this.registry, streamArgs);
+
+      return this.registry.make.apply(this.registry, streamArgs);
+    },
+
+    setupActionStream: function ($actionEl, action, streamData, propertyName) {
+      var view = this,
+          args = Array.prototype.slice.call(arguments, 2),
+          stream;
+
+      if (propertyName) {
+        args.unshift(this.propFromPath(propertyName));
+      }
+
+      stream = this.setupStream.apply(this, [streamData].concat(args));
       $actionEl.on(action, function (e) {
         e.proView = view;
         stream.trigger(e);
