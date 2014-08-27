@@ -3868,6 +3868,12 @@
 	            if (!self.val.__pro__) {
 	              P.prob(self.val);
 	            }
+
+              // PATCH
+              if (P.U.isArray(this)) {
+                self.update();
+                return;
+              }
 	
 	            var oldProps = self.oldVal.__pro__.properties,
 	                newProps = self.val.__pro__.properties,
@@ -5142,7 +5148,10 @@
 	        meta = [meta];
 	      }
 	
-	      P.registry.setup.apply(P.registry, [result].concat(meta));
+        // PATCH
+        if (!(meta[0] instanceof ProAct.Property)) {
+          P.registry.setup.apply(P.registry, [result].concat(meta));
+        }
 	    }
 	
 	    return result;
@@ -5283,6 +5292,10 @@
 	   *      The event.
 	   */
 	  makeEvent: function (source, eventData) {
+      if (!eventData) {
+        return new P.E(source, this.shell, P.E.Types.array, pArrayOps.setLength, -1, this.shell.length, this.shell.length);
+      }
+
 	    var op = eventData[0],
 	        ind = eventData[1],
 	        oldVal = eventData[2],
