@@ -34,6 +34,9 @@
       enter: function (event) {
         return event.keyCode === 13;
       },
+      esc: function (event) {
+        return event.keyCode === 27;
+      },
       val: function (event) {
         return $(event.target).prop('value');
       }
@@ -45,6 +48,7 @@
       'input.edit': {
         keydown: [
           ['filter(l:enter)|map(pop)|>>($1)', 'classes'],
+          ['filter(l:esc)|map(pop)|>>($1)', 'classes'],
           ['filter(l:enter)|map(l:val)|>>($1)', 'description']
         ]
       },
@@ -58,9 +62,42 @@
   });
 
   app.TaskViews = ProAct.Views.extend({
-    el: 'ul',
-    id: 'todo-list',
-    childType: app.TaskView
+    el: 'section',
+    id: 'todoapp',
+    itemsEl: 'ul',
+    itemsId: 'todo-list',
+    childType: app.TaskView,
+    completedItems: function () {
+      return this.items.filter(function (item) {
+        return item.done;
+      });
+    },
+    leftItems: function () {
+      return this.items.filter(function (item) {
+        return !item.done;
+      });
+    },
+    completed: function () {
+      var ln = this.completedItems.length;
+      return 'Clear completed (' + ln + ')';
+    },
+    left: function () {
+      var ln = this.leftItems.length,
+          text = (ln === 1) ? ' item left' : ' items left';
+      return '<strong>' + ln + '</strong>' + text;
+    },
+    lambdas: {
+      completedCountToClass: function (e) {
+        if (e.args[0].completedItems.length === 0) {
+          return 'hidden';
+        }
+
+        return ProAct.Event.simple('array', 'del', 'hidden');
+      }
+    },
+    pipes: [
+      ['completedItems', 'map(l:completedCountToClass)', 'btnCompletedClasses']
+    ]
   });
 
   app.storage = new ProAct.MemStorage();
@@ -75,11 +112,23 @@
     description: 'Return to tanya'
   }, app.storage);
 
+  app.model3 = app.Task.create({
+    done: false,
+    description: 'Dring beer.'
+  }, app.storage);
+
+  app.model4 = app.Task.create({
+    done: false,
+    description: 'Fighting...'
+  }, app.storage);
+
   app.model.save();
   app.model2.save();
+  app.model3.save();
+  app.model4.save();
 
   app.views = new app.TaskViews();
-  app.views.render(ProAct.Models.create(app.Task, app.storage));
-
+  app.models = ProAct.Models.create(app.Task, app.storage);
+  app.views.render(app.models);
 
 })( window );
