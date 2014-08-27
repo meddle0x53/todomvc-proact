@@ -2,12 +2,16 @@
   'use strict';
 
   ProAct.Views = ProAct.Views || ProAct.View.extend({
-    children: [],
+    $itemsEl: null,
+    children: {},
     template: null,
     type: 'views',
     childType: null,
     items: function () {
       return this.models;
+    },
+    length: function () {
+      return this.items.length;
     }
   });
 
@@ -16,8 +20,11 @@
 
     bindModel: function (models) {
       if (!this.models) {
+        this.models = models;
+
         ProAct.prob(this, {
           $el: 'noprop',
+          $itemsEl: 'noprop',
           $parent: 'noprop',
           model: 'noprop',
           streams: 'noprop',
@@ -29,24 +36,67 @@
           childType: 'noprop'
         });
 
-        this.models = models;
         this.models.load();
       }
     },
 
-    doRender: function () {
-      var view = this,
-          i, ln = this.items.length,
-          child;
-
-      for (i = 0; i < ln; i++) {
-        child = new this.childType({
-          parentView: view
+    addChildView: function (childModel) {
+      if (!this.children[childModel.uuid()]) {
+        var child = new this.childType({
+          parentView: this
         });
 
-        child.render(this.items[i])
-        this.children[i] = child;
+        child.render(childModel)
+        this.children[childModel.uuid()] = child;
       }
+    },
+
+    doRender: function () {
+      if (this.itemsEl && this.itemsId) {
+        this.$itemsEl = $(this.itemsEl + '#' + this.itemsId);
+      }
+      var view = this,
+          i, ln = this.items.length;
+
+      for (i = 0; i < ln; i++) {
+        this.addChildView(this.items[i]);
+      }
+
+      this.models.core.on(function (event) {
+        var op    = event.args[0],
+            ind   = event.args[1],
+            ov    = event.args[2],
+            nv    = event.args[3],
+            ovs, nvs, i, ln,
+            slice = Array.prototype.slice,
+            operations = ProAct.Array.Operations;
+
+        if (op === operations.add) {
+          // TODO
+        } else if (op === operations.remove) {
+          // TODO
+        } else if (op === operations.splice) {
+          if (nv) {
+            nvs = slice.call(nv, 0);
+            ln = nvs.length;
+
+            for (i = 0; i < ln; i++) {
+              view.addChildView(nvs[i]);
+            }
+
+          }
+
+          if (ov) {
+            ovs = slice.call(ov, 0);
+            ln = ovs.length;
+
+            for (i = 0; i < ln; i++) {
+              view.children[ovs[i].uuid()].destroy();
+              delete view.children[ovs[i].uuid()];
+            }
+          }
+        }
+      });
     }
   });
 
