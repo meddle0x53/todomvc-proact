@@ -13,7 +13,6 @@
 
     ProAct.Array.apply(this, initial);
 
-
     this.storageListener = function (event) {
       var op    = event.args[0],
           ind   = event.args[1],
