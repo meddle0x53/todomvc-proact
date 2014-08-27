@@ -74,7 +74,6 @@
     return null;
   };
 
-
   ProAct.ArrayCore.prototype.makeListener = function () {
     var self = this.shell;
     return function (event) {
@@ -125,7 +124,11 @@
           self.sort();
         }
       } else if (op === operations.splice) {
-        nvs = slice.call(nv, 0);
+        if (nv) {
+          nvs = slice.call(nv, 0);
+        } else {
+          nvs = [];
+        }
         if (ind === null || ind === undefined) {
           ind = self.indexOf(ov[0]);
           if (ind === -1) {
@@ -136,7 +139,6 @@
       }
     };
   };
-
 
   ProAct.DSL.predefined.mapping.pop = function () {
     return ProAct.Event.simple('array', 'pop');
