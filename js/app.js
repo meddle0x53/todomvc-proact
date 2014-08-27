@@ -17,9 +17,7 @@
                   '<input class="edit" value="Rule the web" pro-bind="one-way:description">' +
                 '</li>';
 
-  app.View = ProAct.View.extend({
-    el: 'li',
-    id: 'test',
+  app.TaskView = ProAct.View.extend({
     $parent: $('ul#todo-list'),
     template: template,
     lambdas: {
@@ -33,7 +31,7 @@
 
         return ProAct.Event.simple('array', 'pop');
       },
-      onEnter: function (event) {
+      enter: function (event) {
         return event.keyCode === 13;
       },
       val: function (event) {
@@ -46,14 +44,23 @@
       },
       'input.edit': {
         keydown: [
-          ['filter(l:onEnter)|map(pop)|>>($1)', 'classes'],
-          ['filter(l:onEnter)|map(l:val)|>>($1)', 'description']
+          ['filter(l:enter)|map(pop)|>>($1)', 'classes'],
+          ['filter(l:enter)|map(l:val)|>>($1)', 'description']
         ]
+      },
+      'button.destroy': {
+        click: ['map(true)|>>($1)', 'isDestroyed']
       }
     },
     pipes: [
       ['done', 'map(eventToVal)|map(l:complete)', 'classes']
     ]
+  });
+
+  app.TaskViews = ProAct.Views.extend({
+    el: 'ul',
+    id: 'todo-list',
+    childType: app.TaskView
   });
 
   app.storage = new ProAct.MemStorage();
@@ -68,11 +75,11 @@
     description: 'Return to tanya'
   }, app.storage);
 
-  app.view = new app.View();
-  app.view.render(app.model);
+  app.model.save();
+  app.model2.save();
 
-  app.view2 = new app.View();
-  app.view2.render(app.model2);
+  app.views = new app.TaskViews();
+  app.views.render(ProAct.Models.create(app.Task, app.storage));
 
 
 })( window );

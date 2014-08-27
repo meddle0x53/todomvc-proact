@@ -69,12 +69,7 @@
       }
     },
 
-    beforeRender: function ($el) {
-    },
-
-    render: function (model) {
-      this.bindModel(model);
-
+    setupElement: function () {
       if (!this.$el) {
         if (this.template) {
           this.$el = $(this.template);
@@ -89,23 +84,17 @@
         }
 
         if (!this.$el || this.$el.length === 0) {
-          return;
+          return false;
         }
 
         this.$el = this.$el.first();
       }
 
-      this.beforeRender(this.$el);
+      return !!this.$el;
+    },
 
-      var view = this,
-          $bindings = this.$el.find('[pro-bind]'),
-          streams = this.streams,
-          pipes = this.pipes,
-          streamPath, action, $actionEl,
-          pipeData, pipeStreamData, pipeDataLn, pipeArgs,
-          streamData, prop,
-          p, i, ln;
-
+    setupClasses: function () {
+      var view = this;
       this.classes.core.on(function (event) {
         var op    = event.args[0],
             ind   = event.args[1],
@@ -138,6 +127,11 @@
           }
         }
       });
+    },
+
+    setupBindings: function () {
+      var view = this,
+          $bindings = this.$el.find('[pro-bind]');
 
       $bindings.each(function () {
         var $binding = $(this),
@@ -146,11 +140,14 @@
             oneWay = (tag !== 'input'),
             updating = false;
 
+        if (!view.p(property)) {
+          return;
+        }
+
         if (property.substring(0, 7) === 'one-way') {
           property = property.substring(8);
           oneWay = true;
         }
-
 
         // ->
         view.p(property).on(function () {
@@ -187,8 +184,13 @@
             updating = false;
           }
         });
-
       });
+    },
+
+    setupStreams: function () {
+      var streams = this.streams,
+          streamPath, action, $actionEl,
+          streamData, i, ln;
 
       for (streamPath in streams) {
         $actionEl = this.$el.find(streamPath)
@@ -204,10 +206,21 @@
           }
         }
       }
+    },
+
+    setupPipes: function () {
+      var pipes = this.pipes,
+          pipeData, pipeStreamData, pipeDataLn, pipeArgs,
+          prop, p, i, ln;
 
       ln = pipes.length;
       for (i = 0; i < ln; i++) {
         pipeData = pipes[i];
+
+        if (!this.p(pipeData[0]) || !this.p(pipeData[2])) {
+          continue;
+        }
+
         pipeDataLn = pipeData.length;
 
         if (pipeDataLn > 2) {
@@ -226,10 +239,46 @@
           prop.update(prop.makeEvent());
         }
       }
+    },
+
+    beforeRender: function ($el) {
+    },
+
+    doRender: function ($el) {
+      var view = this;
+
+      if (this.parentView) {
+        this.$parent = this.parentView.$el;
+      }
 
       if (this.template && this.$parent) {
         this.$parent.append(this.$el);
       }
+
+      if (this.model) {
+        this.model.p('isDestroyed').on(function (e) {
+          if (view.isDestroyed) {
+            // TODO Real destroy here!
+            view.$el.remove();
+          }
+        });
+      }
+    },
+
+    render: function (model) {
+      this.bindModel(model);
+
+      if (!this.setupElement()) {
+        return;
+      }
+
+      this.beforeRender(this.$el);
+      this.setupClasses();
+      this.setupBindings();
+      this.setupStreams();
+      this.setupPipes();
+
+      this.doRender();
 
       this.afterRender(this.$el);
     },
@@ -269,8 +318,13 @@
           stream;
 
       if (propertyName) {
-        args.unshift(this.propFromPath(propertyName));
+        if (this.p(propertyName)) {
+          args.unshift(this.propFromPath(propertyName));
+        } else {
+          return;
+        }
       }
+
 
       stream = this.setupStream.apply(this, [streamData].concat(args));
       $actionEl.on(action, function (e) {
