@@ -16,6 +16,10 @@
         };
 
     ProAct.Utils.ex(child, parent);
+
+    child.initData = {};
+    ProAct.Utils.ex(child.initData, parent.initData);
+
     ProAct.Utils.ex(child.prototype, parent.prototype);
     ProAct.Utils.ex(child.initData, data);
 
@@ -144,6 +148,10 @@
 
   ProAct.DSL.predefined.mapping.eventToVal = function (event) {
     return event.args[0][event.target];
+  };
+
+  ProAct.DSL.predefined.mapping['true'] = function (event) {
+    return true;
   };
 
 
