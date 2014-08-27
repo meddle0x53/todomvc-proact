@@ -93,40 +93,45 @@
       return !!this.$el;
     },
 
-    setupClasses: function () {
-      var view = this;
-      this.classes.core.on(function (event) {
+    classesListener: function ($el) {
+      var v = this;
+      return function (event) {
         var op    = event.args[0],
             ind   = event.args[1],
             ov    = event.args[2],
             nv    = event.args[3],
-            nvs, ovs, i, ln,
+            nvs, i, ln,
             slice = Array.prototype.slice,
             operations = ProAct.Array.Operations;
+
         if (op === operations.add) {
           nvs = slice.call(nv, 0);
           ln = nvs.length;
           for (i = 0; i < ln; i++) {
-            view.$el.addClass(nvs[i]);
+            $el.addClass(nvs[i]);
           }
         } else if (op === operations.remove) {
-          view.$el.removeClass(ov);
+
+          $el.removeClass(ov);
         } else if (op === operations.splice) {
           nvs = slice.call(nv, 0);
           ln = nvs.length;
 
           for (i = 0; i < ln; i++) {
-            view.$el.addClass(nvs[i]);
+            $el.addClass(nvs[i]);
           }
 
-          ovs = slice.call(ov, 0);
-          ln = ovs.length;
+          ln = ov.length;
 
           for (i = 0; i < ln; i++) {
-            view.$el.removeClass(ovs[i]);
+            $el.removeClass(ov[i]);
           }
         }
-      });
+      };
+    },
+
+    setupClasses: function () {
+      this.classes.core.on(this.classesListener(this.$el));
     },
 
     setupBindings: function () {
@@ -138,15 +143,21 @@
             property = $binding.attr('pro-bind'),
             tag = $binding.prop('tagName').toLowerCase(),
             oneWay = (tag !== 'input'),
+            safe = false,
             updating = false;
-
-        if (!view.p(property)) {
-          return;
-        }
 
         if (property.substring(0, 7) === 'one-way') {
           property = property.substring(8);
           oneWay = true;
+        }
+
+        if (property.substring(0, 4) === 'safe') {
+          property = property.substring(5);
+          safe = true;
+        }
+
+        if (!view.p(property)) {
+          return;
         }
 
         // ->
@@ -156,7 +167,7 @@
           }
 
           if (tag !== 'input') {
-            $binding.text(view[property]);
+            safe ? $binding.html(view[property]) : $binding.text(view[property]);
           } else if ($binding.attr('type') === 'checkbox') {
             $binding.prop('checked', view[property]);
           } else {
@@ -184,6 +195,20 @@
             updating = false;
           }
         });
+      });
+
+      $bindings = this.$el.find('[pro-class]');
+      $bindings.each(function () {
+        var $binding = $(this),
+            property = $binding.attr('pro-class'),
+            prop = view[property];
+
+        if (!prop) {
+          view.p().set(property, []);
+          prop = view[property];
+        }
+
+        prop.core.on(view.classesListener($binding));
       });
     },
 
@@ -217,7 +242,7 @@
       for (i = 0; i < ln; i++) {
         pipeData = pipes[i];
 
-        if (!this.p(pipeData[0]) || !this.p(pipeData[2])) {
+        if (!this.p(pipeData[2])) {
           continue;
         }
 
@@ -248,20 +273,24 @@
       var view = this;
 
       if (this.parentView) {
-        this.$parent = this.parentView.$el;
+        this.$parent = this.parentView.$itemsEl ? this.parentView.$itemsEl : this.parentView.$el;
       }
 
       if (this.template && this.$parent) {
         this.$parent.append(this.$el);
       }
 
-      if (this.model) {
+      if (this.model && !this.parentView) {
         this.model.p('isDestroyed').on(function (e) {
-          if (view.isDestroyed) {
-            // TODO Real destroy here!
-            view.$el.remove();
-          }
+          view.destroy();
         });
+      }
+    },
+
+    destroy: function () {
+      if (this.isDestroyed) {
+        // TODO Real destroy here!
+        this.$el.remove();
       }
     },
 
@@ -287,11 +316,17 @@
     },
 
     propFromPath: function (path) {
-      var prop = this.p(path);
+      var prop = this, i,
+          paths = path.split('.'),
+          ln = paths.length - 1;
 
-      if (prop.type() === ProAct.Property.Types.array) {
+      for (i = 0; i < ln; i++) {
+        prop = prop[paths[i]];
+      }
+      prop = prop.p(paths[i]);
+
+      if (prop.type && (prop.type() === ProAct.Property.Types.array)) {
         prop = prop.get().core;
-
       }
 
       if (prop.target) {
@@ -318,16 +353,12 @@
           stream;
 
       if (propertyName) {
-        if (this.p(propertyName)) {
-          args.unshift(this.propFromPath(propertyName));
-        } else {
-          return;
-        }
+        args.unshift(this.propFromPath(propertyName));
       }
 
 
       stream = this.setupStream.apply(this, [streamData].concat(args));
-      $actionEl.on(action, function (e) {
+      $actionEl.on(action + '.' + this.id, function (e) {
         e.proView = view;
         stream.trigger(e);
       });
