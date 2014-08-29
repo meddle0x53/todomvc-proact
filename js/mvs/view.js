@@ -131,6 +131,9 @@
     },
 
     setupClasses: function () {
+      if (this.classes === null) {
+        this.classes = [];
+      }
       this.classes.core.on(this.classesListener(this.$el));
     },
 
@@ -242,9 +245,9 @@
       for (i = 0; i < ln; i++) {
         pipeData = pipes[i];
 
-        if (!this.p(pipeData[2])) {
-          continue;
-        }
+       // if (!this.p(pipeData[2])) {
+       //   continue;
+       // }
 
         pipeDataLn = pipeData.length;
 
@@ -258,7 +261,9 @@
           pipeArgs.push(prop);
           pipeArgs.push(this.propFromPath(pipeData[2]));
 
-          this.setupStream.apply(this, [pipeStreamData].concat(pipeArgs));
+          var s = this.setupStream.apply(this, [pipeStreamData].concat(pipeArgs));
+          window.s = window.s || {};
+          window.s[pipeData[0]] = s;
 
           // sync
           prop.update(prop.makeEvent());
@@ -315,12 +320,27 @@
     afterRender: function ($el) {
     },
 
-    propFromPath: function (path) {
-      var prop = this, i,
+    allArrayProps: function (array, paths) {
+      var i, ln = array.length, 
+          props = [],
+          path = paths.join('.');
+
+      for (i = 0; i < ln; i++) {
+        props.push(this.propFromPath(path, array[i]))
+      }
+
+      return props;
+    },
+
+    propFromPath: function (path, obj) {
+      var prop = obj ? obj : this, i,
           paths = path.split('.'),
           ln = paths.length - 1;
 
       for (i = 0; i < ln; i++) {
+        if (paths[i] === '[]') {
+          return this.allArrayProps(prop._array, paths.slice(i + 1));
+        }
         prop = prop[paths[i]];
       }
       prop = prop.p(paths[i]);
