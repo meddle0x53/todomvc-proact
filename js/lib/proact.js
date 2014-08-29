@@ -1799,7 +1799,14 @@
 	   * @see {@link ProAct.Observable#into}
 	   */
 	  out: function (destination) {
-	    destination.into(this);
+      if (P.U.isArray(destination)) {
+        var self = this;
+        destination.forEach(function (observable) {
+          self.out(observable);
+        });
+      } else {
+        destination.into(this);
+      }
 	
 	    return this;
 	  },
@@ -3890,7 +3897,6 @@
 	                newListeners = newProp.listeners.change;
 	
 	                oldProp = oldProps[oldPropName];
-	                oldListeners = oldProp.listeners.change;
 	                oldListenersLength = oldListeners.length;
 	
 	                for (i = 0; i < oldListenersLength; i++) {
@@ -5498,7 +5504,7 @@
 	    } else if (isO(array[i])) {
 	      new P.ObjectProperty(array, i);
 	    }
-	
+
 	    Object.defineProperty(proArray, i, {
 	      enumerable: true,
 	      configurable: true,
@@ -6951,6 +6957,7 @@
 	   */
 	  filter: function (filtered, original, args) {
 	    var fun = args[0], thisArg = args[1];
+
 	    return function (event) {
 	      pArrayLs.check(event);
 	      var op  = event.args[0],
