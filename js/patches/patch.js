@@ -29,6 +29,24 @@
     return child;
   };
 
+  ProAct.Utils.clone = function (obj) {
+    if (P.U.isArray(obj)) {
+      return obj.slice(0);
+    }
+    return obj;
+  };
+
+  ProAct.Utils.ex = function(destination, source) {
+    var p;
+
+    for (p in source) {
+      if (source.hasOwnProperty(p)) {
+        destination[p] = P.U.clone(source[p]);
+      }
+    }
+    return destination;
+  };
+
   ProAct.Event.make = function (source, target, type, data) {
     if (type === 'array' || type === ProAct.Event.Types.array) {
       return ProAct.Event.makeArray(data[0], data.slice(1));
@@ -150,6 +168,10 @@
 
   ProAct.DSL.predefined.mapping.eventToVal = function (event) {
     return event.args[0][event.target];
+  };
+
+  ProAct.DSL.predefined.filtering.defined = function (event) {
+    return event.args[0][event.target] !== undefined;
   };
 
   ProAct.DSL.predefined.mapping['true'] = function (event) {
