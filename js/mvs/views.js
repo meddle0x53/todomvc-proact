@@ -8,7 +8,9 @@
     type: 'views',
     childType: null,
     items: function () {
-      return this.models;
+      return this.models.filter(function () {
+        return true;
+      });
     },
     length: function () {
       return this.items.length;
@@ -72,7 +74,12 @@
             operations = ProAct.Array.Operations;
 
         if (op === operations.add) {
-          // TODO
+          nvs = slice.call(nv, 0);
+          ln = nvs.length;
+
+          for (i = 0; i < ln; i++) {
+            view.addChildView(nvs[i]);
+          }
         } else if (op === operations.remove) {
           // TODO
         } else if (op === operations.splice) {
