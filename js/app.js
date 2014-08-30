@@ -18,7 +18,6 @@
                 '</li>';
 
   app.TaskView = ProAct.View.extend({
-    $parent: $('ul#todo-list'),
     template: template,
     lambdas: {
       editing: function () {
@@ -29,7 +28,7 @@
           return 'completed';
         }
 
-        return ProAct.Event.simple('array', 'pop');
+        return ProAct.Event.simple('array', 'del', 'completed');
       },
       enter: function (event) {
         return event.keyCode === 13;
@@ -67,13 +66,14 @@
     itemsEl: 'ul',
     itemsId: 'todo-list',
     childType: app.TaskView,
+    doneAll: undefined,
     completedItems: function () {
-      return this.items.filter(function (item) {
+      return this.models.filter(function (item) {
         return item.done;
       });
     },
     leftItems: function () {
-      return this.items.filter(function (item) {
+      return this.models.filter(function (item) {
         return !item.done;
       });
     },
@@ -93,10 +93,19 @@
         }
 
         return ProAct.Event.simple('array', 'del', 'hidden');
+      },
+      itemsCountToClass: function (e) {
+        if (e.target.length === 0) {
+          return 'hidden';
+        }
+
+        return ProAct.Event.simple('array', 'del', 'hidden');
       }
     },
     pipes: [
-      ['completedItems', 'map(l:completedCountToClass)', 'btnCompletedClasses']
+      ['completedItems', 'map(l:completedCountToClass)', 'btnCompletedClasses'],
+      ['models', 'map(l:itemsCountToClass)', 'footerClass'],
+      ['doneAll', 'filter(defined)', 'models.[].done']
     ]
   });
 
