@@ -92,70 +92,110 @@
     return null;
   };
 
-  ProAct.ArrayCore.prototype.makeListener = function () {
-    var self = this.shell;
-    return function (event) {
-      if (!event || !(event instanceof ProAct.Event)) {
-        self.push(event);
+  ProAct.ArrayCore.prototype.actionFunction =  function (fun) {
+    var core = this,
+        slice = Array.prototype.slice;
+    return function () {
+      var oldCaller = ProAct.currentCaller,
+          i = arguments[1], res;
 
-        return;
-      }
+      ProAct.currentCaller = core.indexListener(i);
+      res = fun.apply(this, slice.call(arguments, 0));
+      ProAct.currentCaller = oldCaller;
 
-      if (event.type === ProAct.Event.Types.value) {
-        self.push(event.args[2]);
-
-        return;
-      }
-
-      var op    = event.args[0],
-          ind   = event.args[1],
-          ov    = event.args[2],
-          nv    = event.args[3],
-          pArrayProto = ProAct.Array.prototype,
-          nvs,
-          slice = Array.prototype.slice,
-          operations = ProAct.Array.Operations;
-
-      if (op === operations.set) {
-        self[ind] = nv;
-      } else if (op === operations.add) {
-        nvs = slice.call(nv, 0);
-        if (ind === 0) {
-          pArrayProto.unshift.apply(self, nvs);
-        } else {
-          pArrayProto.push.apply(self, nvs);
-        }
-      } else if (op === operations.remove) {
-        if (ind === 0) {
-          self.shift();
-        } else {
-          self.pop();
-        }
-      } else if (op === operations.setLength) {
-        self.length = nv;
-      } else if (op === operations.reverse) {
-        self.reverse();
-      } else if (op === operations.sort) {
-        if (ProAct.Utils.isFunction(nv)) {
-          self.sort(nv);
-        } else {
-          self.sort();
-        }
-      } else if (op === operations.splice) {
-        if (nv) {
-          nvs = slice.call(nv, 0);
-        } else {
-          nvs = [];
-        }
-        if (ind === null || ind === undefined) {
-          ind = self.indexOf(ov[0]);
-          if (ind === -1) {
-            return;
-          }
-        }
-        pArrayProto.splice.apply(self, [ind, ov.length].concat(nvs));
-      }
+      return res;
     };
+  };
+
+  ProAct.ArrayCore.prototype.indexListener = function (i) {
+    if (!this.indexListeners) {
+      this.indexListeners = {};
+    }
+
+    var core = this,
+        shell = core.shell;
+    if (!this.indexListeners[i]) {
+      this.indexListeners[i] = {
+        call: function (source) {
+          core.makeListener(new ProAct.Event(source, shell, ProAct.Event.Types.array, [
+            ProAct.Array.Operations.set, i, shell._array[i], shell._array[i]
+          ]));
+        },
+        property: core
+      };
+    }
+
+    return this.indexListeners[i];
+  };
+
+  ProAct.ArrayCore.prototype.makeListener = function () {
+    if (!this.listener) {
+      var self = this.shell;
+      this.listener =  function (event) {
+        if (!event || !(event instanceof ProAct.Event)) {
+          self.push(event);
+
+          return;
+        }
+
+        if (event.type === ProAct.Event.Types.value) {
+          self.push(event.args[2]);
+
+          return;
+        }
+
+        var op    = event.args[0],
+            ind   = event.args[1],
+            ov    = event.args[2],
+            nv    = event.args[3],
+            pArrayProto = ProAct.Array.prototype,
+            nvs,
+            slice = Array.prototype.slice,
+            operations = ProAct.Array.Operations;
+
+        if (op === operations.set) {
+          self[ind] = nv;
+        } else if (op === operations.add) {
+          nvs = slice.call(nv, 0);
+          if (ind === 0) {
+            pArrayProto.unshift.apply(self, nvs);
+          } else {
+            pArrayProto.push.apply(self, nvs);
+          }
+        } else if (op === operations.remove) {
+          if (ind === 0) {
+            self.shift();
+          } else {
+            self.pop();
+          }
+        } else if (op === operations.setLength) {
+          self.length = nv;
+        } else if (op === operations.reverse) {
+          self.reverse();
+        } else if (op === operations.sort) {
+          if (ProAct.Utils.isFunction(nv)) {
+            self.sort(nv);
+          } else {
+            self.sort();
+          }
+        } else if (op === operations.splice) {
+          if (nv) {
+            nvs = slice.call(nv, 0);
+          } else {
+            nvs = [];
+          }
+          if (ind === null || ind === undefined) {
+            ind = self.indexOf(ov[0]);
+            if (ind === -1) {
+              return;
+            }
+          }
+          pArrayProto.splice.apply(self, [ind, ov.length].concat(nvs));
+        }
+      };
+    }
+
+    return this.listener;
   };
 
   ProAct.DSL.predefined.mapping.pop = function () {

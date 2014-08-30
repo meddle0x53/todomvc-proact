@@ -5502,6 +5502,8 @@
 	    } else if (isF(array[i])) {
 	    } else if (array[i] === null) {
 	    } else if (isO(array[i])) {
+        // PATCH
+        this.isComplex = true;
 	      new P.ObjectProperty(array, i);
 	    }
 
@@ -5858,7 +5860,7 @@
 	
 	    return forEach.apply(this._array, arguments);
 	  },
-	
+
 	  /**
 	   * The <b>filter()</b> method creates a new ProAct.Array with all elements that pass the test implemented by the provided function.
 	   * <p>
@@ -5878,6 +5880,10 @@
 	   * @see {@link ProAct.Array.reFilter}
 	   */
 	  filter: function (fun, thisArg) {
+      // PATCH
+      if (this.core.isComplex) {
+        fun = this.core.actionFunction(fun);
+      }
 	    var filtered = new P.A(filter.apply(this._array, arguments));
 	    this.core.on(pArrayLs.filter(filtered, this, arguments));
 	
