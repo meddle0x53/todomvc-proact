@@ -17,7 +17,8 @@
     lambdas: {},
     $parent: null,
     parentView: null,
-    template: null
+    template: null,
+    multyStreams: {}
   };
 
   ProAct.View.idNumber = 1;
@@ -239,15 +240,12 @@
     setupPipes: function () {
       var pipes = this.pipes,
           pipeData, pipeStreamData, pipeDataLn, pipeArgs,
-          prop, p, i, ln;
+          prop, p, i, ln,
+          destination, stream;
 
       ln = pipes.length;
       for (i = 0; i < ln; i++) {
         pipeData = pipes[i];
-
-       // if (!this.p(pipeData[2])) {
-       //   continue;
-       // }
 
         pipeDataLn = pipeData.length;
 
@@ -259,11 +257,17 @@
 
           prop = this.propFromPath(pipeData[0]);
           pipeArgs.push(prop);
-          pipeArgs.push(this.propFromPath(pipeData[2]));
 
-          var s = this.setupStream.apply(this, [pipeStreamData].concat(pipeArgs));
+          destination = this.propFromPath(pipeData[2]);
+          pipeArgs.push(destination);
+
+          var stream = this.setupStream.apply(this, [pipeStreamData].concat(pipeArgs));
           window.s = window.s || {};
-          window.s[pipeData[0]] = s;
+          window.s[pipeData[0]] = stream;
+
+          if (P.U.isArray(destination)) {
+            this.multyStreams[pipeData[2]] = stream;
+          }
 
           // sync
           prop.update(prop.makeEvent());
@@ -347,6 +351,12 @@
 
       if (prop.type && (prop.type() === ProAct.Property.Types.array)) {
         prop = prop.get().core;
+      }
+
+      if (prop.type && (prop.type() === ProAct.Property.Types.auto)) {
+        if (P.U.isProArray(prop.get())) {
+          prop = prop.get().core;
+        }
       }
 
       if (prop.target) {
