@@ -47,6 +47,7 @@
           storage = this.register(uuid);
 
       storage.push(model);
+      model.isCreated = true;
       model.isSaved = true;
 
       return ProAct.Storage.prototype.create.call(this, model);

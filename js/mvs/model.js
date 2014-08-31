@@ -8,7 +8,8 @@
 
   ProAct.Model.initData = {
     isDestroyed: false,
-    isSaved: false
+    isSaved: false,
+    isCreated: false
   };
 
   ProAct.Model.create = function (data, storage) {
@@ -41,6 +42,12 @@
           return model.destroy();
         }
       });
+
+      this.p('isSaved').on(function () {
+        if (model.isSaved) {
+          return model.save();
+        }
+      });
     },
 
     uuid: function () {
@@ -52,7 +59,7 @@
     },
 
     save: function () {
-      if (!this.isSaved) {
+      if (!this.isCreated) {
         return this.storage.create(this);
       }
 
