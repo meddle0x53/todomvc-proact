@@ -107,6 +107,60 @@
     };
   };
 
+	ProAct.ArrayFilter = function (array, filter, registry, propertyPath) {
+	  P.Observable.call(this);
+
+    if (!P.U.isProArray(array)) {
+      array = new ProAct.Array(array);
+    }
+
+    if (registry && P.U.isString(registry)) {
+      propertyPath = registry;
+      registry = null;
+    }
+	
+    if (P.U.isString(filter)) {
+      if (!registry && ProAct.registry) {
+        registry = ProAct.registry;
+      }
+      filter = registry.get(filter);
+    }
+
+    this.original = array;
+    this.array = array.filter(filter);
+    this.propertyPath = propertyPath;
+	};
+
+	ProAct.ArrayFilter.prototype = P.U.ex(Object.create(P.Observable.prototype), {
+    constructor: ProAct.ArrayFilter,
+
+    makeEvent: function (source) {
+      return source;
+    },
+
+	  makeListener: function () {
+	    if (!this.listener) {
+	      var filter = this;
+	      this.listener = function (event) {
+          var propertyPath = filter.propertyPath;
+          filter.listeners.change = [];
+          filter.array._array.forEach(function (el) {
+            if (propertyPath && el.__pro__ && el.p(propertyPath)) {
+              filter.on(el.p(propertyPath).makeListener());
+            } else if (el.makeListener) {
+              filter.on(el.makeListener());
+            }
+          });
+
+          filter.update(event);
+          filter.listeners.change = [];
+	      };
+	    }
+	
+	    return this.listener;
+	  }
+  });
+
   ProAct.ArrayCore.prototype.indexListener = function (i) {
     if (!this.indexListeners) {
       this.indexListeners = {};
