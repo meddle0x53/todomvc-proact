@@ -14,6 +14,7 @@
     type: 'view',
     streams: {},
     pipes: [],
+    actions: [],
     lambdas: {},
     $parent: null,
     parentView: null,
@@ -61,6 +62,7 @@
           model: 'noprop',
           streams: 'noprop',
           pipes: 'noprop',
+          actions: 'noprop',
           lambdas: 'noprop',
           registry: 'noprop',
           template: 'noprop',
@@ -187,18 +189,25 @@
         }
 
         // <-
-        $binding.on('change', function () {
-          try {
-            updating = true;
-            if ($binding.attr('type') === 'checkbox') {
+        if ($binding.attr('type') === 'checkbox') {
+          $binding.on('change', function () {
+            try {
+              updating = true;
               view[property] = $binding.prop('checked');
-            } else {
-              view[property] = $binding.prop('value');
+            } finally {
+              updating = false;
             }
-          } finally {
-            updating = false;
-          }
-        });
+          });
+        } else {
+          $binding.on('keydown', function () {
+            try {
+              updating = true;
+              view[property] = $binding.prop('value');
+            } finally {
+              updating = false;
+            }
+          });
+        }
       });
 
       $bindings = this.$el.find('[pro-class]');
@@ -275,6 +284,38 @@
       }
     },
 
+    setupActions: function () {
+      var actions = this.actions,
+          actionData, actionStreamData, actionDataLn, actionArgs,
+          prop, p, i, ln,
+          action, stream;
+
+      ln = actions.length;
+      for (i = 0; i < ln; i++) {
+        actionData = actions[i];
+
+        actionDataLn = actionData.length;
+
+        if (actionDataLn > 2) {
+          p = actionDataLn - 3;
+
+          actionStreamData = actionData[1] + '|<<($' + (p + 1) + ')|@($' + (p + 2) + ')';
+          actionArgs = actionData.slice(3);
+
+          prop = this.propFromPath(actionData[0]);
+          actionArgs.push(prop);
+
+          action = this.registry.get(actionData[2]);
+          actionArgs.push(P.U.bind(this, action));
+
+          this.setupStream.apply(this, [actionStreamData].concat(actionArgs));
+
+          // sync
+          prop.update(prop.makeEvent());
+        }
+      }
+    },
+
     beforeRender: function ($el) {
     },
 
@@ -297,10 +338,10 @@
     },
 
     destroy: function () {
-      if (this.isDestroyed) {
+      //if (this.isDestroyed) {
         // TODO Real destroy here!
         this.$el.remove();
-      }
+      //}
     },
 
     render: function (model) {
@@ -315,6 +356,7 @@
       this.setupBindings();
       this.setupStreams();
       this.setupPipes();
+      this.setupActions();
 
       this.doRender();
 
@@ -336,18 +378,27 @@
       return props;
     },
 
+    arrayFilter: function (array, filter, path) {
+      return new ProAct.ArrayFilter(array, filter, this.registry, path);
+    },
+
     propFromPath: function (path, obj) {
       var prop = obj ? obj : this, i,
           paths = path.split('.'),
-          ln = paths.length - 1;
+          ln = paths.length - 1,
+          path;
 
       for (i = 0; i < ln; i++) {
-        if (paths[i] === '[]') {
+        path = paths[i];
+        if (path === '[]') {
           return this.allArrayProps(prop._array, paths.slice(i + 1));
+        } else if (path.charAt(0) === '[' && path.charAt(path.length - 1) === ']') {
+          return this.arrayFilter(prop._array, path.substring(1, path.length - 1), paths.slice(i + 1).join('.'));
         }
-        prop = prop[paths[i]];
+
+        prop = prop[path];
       }
-      prop = prop.p(paths[i]);
+      prop = prop.p(path);
 
       if (prop.type && (prop.type() === ProAct.Property.Types.array)) {
         prop = prop.get().core;
