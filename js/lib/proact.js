@@ -5884,8 +5884,12 @@
       if (this.core.isComplex) {
         fun = this.core.actionFunction(fun);
       }
-	    var filtered = new P.A(filter.apply(this._array, arguments));
-	    this.core.on(pArrayLs.filter(filtered, this, arguments));
+
+	    var filtered = new P.A(filter.apply(this._array, arguments)),
+          listener = pArrayLs.filter(filtered, this, arguments);
+	    this.core.on(listener);
+
+      filtered.core.filteringListener = listener;
 	
 	    return filtered;
 	  },
@@ -6965,6 +6969,13 @@
 	    var fun = args[0], thisArg = args[1];
 
 	    return function (event) {
+        // PATCH
+        if (P.U.isFunction(event)) {
+          args[0] = fun = event;
+          pArray.reFilter(original, filtered, args);
+          return;
+        }
+
 	      pArrayLs.check(event);
 	      var op  = event.args[0],
 	          ind = event.args[1],
