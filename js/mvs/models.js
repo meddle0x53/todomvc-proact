@@ -7,6 +7,11 @@
     this.type = type;
     this.storage = storage;
 
+    var uuid = this.type.type ? this.type.type : this.type.uuid;
+    if (this.storage) {
+      this.storage.types[uuid] = this.type;
+    }
+
     if (!initial) {
       initial = [];
     }
@@ -73,18 +78,19 @@
 
     load: function(query) {
       ProAct.Storage.currentCaller = this.makeModelListener();
-      if (this._array.length > 0) {
-        try {
-          this.core.off(this.storageListener);
+      try {
+        this.core.off(this.storageListener);
+        var uuid = this.type.type ? this.type.type : this.type.uuid;
 
-          this.splice(0, this._array.length, this.storage.read(this.type.uuid, query));
-        } finally {
-          this.core.on(this.storageListener);
+        if (this._array.length > 0) {
+          this.splice(0, this._array.length, this.storage.read(uuid, query));
+        } else {
+          ProAct.Array.prototype.push.apply(this, this.storage.read(uuid, query));
         }
-      } else {
-        ProAct.Array.prototype.push.apply(this, this.storage.read(this.type.uuid, query));
+      } finally {
+        this.core.on(this.storageListener);
+        ProAct.Storage.currentCaller = null;
       }
-      ProAct.Storage.currentCaller = null;
     }
   });
 
