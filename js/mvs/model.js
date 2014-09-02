@@ -9,7 +9,9 @@
   ProAct.Model.initData = {
     isDestroyed: false,
     isSaved: false,
-    isCreated: false
+    isCreated: false,
+    shouldDestroy: false,
+    shouldSave: false
   };
 
   ProAct.Model.create = function (data, storage) {
@@ -37,17 +39,19 @@
       this.storage = storage;
 
       var model = this;
-      this.p('isDestroyed').on(function () {
-        if (model.isDestroyed) {
+
+      this.p('shouldDestroy').on(function () {
+        if (model.shouldDestroy) {
           return model.destroy();
         }
       });
 
-      this.p('isSaved').on(function () {
-        if (model.isSaved) {
+      this.p('shouldSave').on(function () {
+        if (model.shouldSave) {
           return model.save();
         }
       });
+
     },
 
     uuid: function () {
@@ -63,7 +67,7 @@
         return this.storage.create(this);
       }
 
-      return this.storage.update(this);
+      return this.storage.save(this);
     },
 
     destroy: function () {
