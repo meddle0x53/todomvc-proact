@@ -13,6 +13,19 @@
       return e;
     },
 
+	  defer: function (event, listener) {
+	    if (listener.property) {
+	      P.Observable.prototype.defer.call(this, event, listener);
+	      return;
+	    }
+	
+	    if (P.U.isFunction(listener)) {
+	      P.flow.push(listener, [event]);
+	    } else {
+	      P.flow.push(listener, listener.call, [event]);
+	    }
+	  },
+
     create: function (model) {
       this.update(model, [model.constructor.uuid]);
 
