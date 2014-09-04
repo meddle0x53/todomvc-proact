@@ -14,7 +14,6 @@
     type: 'view',
     streams: {},
     pipes: [],
-    actions: [],
     lambdas: {},
     $parent: null,
     parentView: null,
@@ -62,10 +61,11 @@
           model: 'noprop',
           streams: 'noprop',
           pipes: 'noprop',
-          actions: 'noprop',
           lambdas: 'noprop',
           registry: 'noprop',
           template: 'noprop',
+          beforeRender: 'noprop',
+          afterRender: 'noprop'
         }, {});
 
         this.model = model;
@@ -261,54 +261,13 @@
         if (pipeDataLn > 2) {
           p = pipeDataLn - 3;
 
-          pipeStreamData = pipeData[1] + '|<<($' + (p + 1) + ')|>>($' + (p + 2) + ')';
+          pipeStreamData = pipeData[1] + '|<<($' + (p + 1) + ')';
           pipeArgs = pipeData.slice(3);
 
           prop = this.propFromPath(pipeData[0]);
           pipeArgs.push(prop);
 
-          destination = this.propFromPath(pipeData[2]);
-          pipeArgs.push(destination);
-
-          var stream = this.setupStream.apply(this, [pipeStreamData].concat(pipeArgs));
-          window.s = window.s || {};
-          window.s[pipeData[0]] = stream;
-
-          if (P.U.isArray(destination)) {
-            this.multyStreams[pipeData[2]] = stream;
-          }
-
-          // sync
-          prop.update(prop.makeEvent());
-        }
-      }
-    },
-
-    setupActions: function () {
-      var actions = this.actions,
-          actionData, actionStreamData, actionDataLn, actionArgs,
-          prop, p, i, ln,
-          action, stream;
-
-      ln = actions.length;
-      for (i = 0; i < ln; i++) {
-        actionData = actions[i];
-
-        actionDataLn = actionData.length;
-
-        if (actionDataLn > 2) {
-          p = actionDataLn - 3;
-
-          actionStreamData = actionData[1] + '|<<($' + (p + 1) + ')|@($' + (p + 2) + ')';
-          actionArgs = actionData.slice(3);
-
-          prop = this.propFromPath(actionData[0]);
-          actionArgs.push(prop);
-
-          action = this.registry.get(actionData[2]);
-          actionArgs.push(P.U.bind(this, action));
-
-          this.setupStream.apply(this, [actionStreamData].concat(actionArgs));
+          this.setupStreamWithDestination(pipeStreamData, pipeData[2], pipeArgs);
 
           // sync
           prop.update(prop.makeEvent());
@@ -338,10 +297,8 @@
     },
 
     destroy: function () {
-      //if (this.isDestroyed) {
-        // TODO Real destroy here!
-        this.$el.remove();
-      //}
+      // TODO Real destroy here!
+      this.$el.remove();
     },
 
     render: function (model) {
@@ -356,7 +313,6 @@
       this.setupBindings();
       this.setupStreams();
       this.setupPipes();
-      this.setupActions();
 
       this.doRender();
 
@@ -382,11 +338,20 @@
       return new ProAct.ArrayFilter(array, filter, this.registry, path);
     },
 
+    regRead: function (key) {
+      var val = this.registry.get(key);
+      if (!val && ProAct.registry) {
+        val = ProAct.registry.get(key);
+      }
+
+      return val;
+    },
+
     propFromPath: function (path, obj) {
       var prop = obj ? obj : this, i,
           paths = path.split('.'),
           ln = paths.length - 1,
-          path;
+          path, prev, method;
 
       for (i = 0; i < ln; i++) {
         path = paths[i];
@@ -398,7 +363,26 @@
 
         prop = prop[path];
       }
+      path = paths[i];
+      prev = prop;
       prop = prop.p(path);
+
+      if (!prop && path.indexOf('do') === 0) {
+        path = path.toLowerCase().substring(2);
+        method = prev[path];
+        if (method && P.U.isFunction(method)) {
+          return P.U.bind(prev, method);
+        }
+      }
+
+      if (!prop && path.indexOf('l:') === 0) {
+        method = this.regRead(path);
+        if (method) {
+          prev = prev[method] ? prev : this;
+
+          return P.U.bind(prev, this.regRead(path));
+        }
+      }
 
       if (prop.type && (prop.type() === ProAct.Property.Types.array)) {
         prop = prop.get().core;
@@ -414,6 +398,7 @@
         prop = prop.target;
       }
 
+
       return prop;
     },
 
@@ -428,17 +413,35 @@
       return this.registry.make.apply(this.registry, streamArgs);
     },
 
-    setupActionStream: function ($actionEl, action, streamData, propertyName) {
-      var view = this,
-          args = Array.prototype.slice.call(arguments, 2),
-          stream;
+    setupStreamWithDestination: function (streamData, destinationName, args) {
+      if (destinationName) {
+        var destination = this.propFromPath(destinationName),
+            dsl = P.U.isFunction(destination) ? '@' : '>>',
+            stream;
 
-      if (propertyName) {
-        args.unshift(this.propFromPath(propertyName));
+        if (streamData) {
+          streamData += '|';
+        }
+
+        streamData +=  dsl + '($' + (args.length + 1) + ')'
+        args.push(destination);
       }
 
+      stream = this.setupStream.apply(this, [streamData].concat(args))
+      if (P.U.isArray(destination)) {
+        this.multyStreams[destinationName] = stream;
+      }
 
-      stream = this.setupStream.apply(this, [streamData].concat(args));
+      return stream;
+    },
+
+    setupActionStream: function ($actionEl, action, streamData, propertyName) {
+      var view = this,
+          args = Array.prototype.slice.call(arguments, 4),
+          stream;
+
+      stream= this.setupStreamWithDestination(streamData, propertyName, args);
+
       $actionEl.on(action + '.' + this.id, function (e) {
         e.proView = view;
         stream.trigger(e);
