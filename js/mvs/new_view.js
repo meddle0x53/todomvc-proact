@@ -3,7 +3,7 @@
 
   ProAct.NewView = ProAct.NewView || ProAct.View.extend({
     type: 'new-view',
-    created: false
+    shouldCreate: false
   });
 
   ProAct.Utils.ex(ProAct.NewView.prototype, {
@@ -27,8 +27,8 @@
         }
       }
 
-      this.p('created').on(function (e) {
-        if (view.created) {
+      this.p('shouldCreate').on(function (e) {
+        if (view.shouldCreate) {
           var model = view.model,
               prop, property,
               newModel = model.constructor.create(
@@ -37,7 +37,7 @@
               );
 
           ProAct.flow.pause();
-          view.created = false;
+          view.shouldCreate = false;
           ProAct.flow.resume();
 
           for (prop in initialModel) {
