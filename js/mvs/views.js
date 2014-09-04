@@ -4,14 +4,12 @@
   ProAct.Views = ProAct.Views || ProAct.View.extend({
     $itemsEl: null,
     children: {},
+    filter: [function () {
+      return true;
+    }],
     template: null,
     type: 'views',
     childType: null,
-    items: function () {
-      return this.models.filter(function () {
-        return true;
-      });
-    },
     length: function () {
       return this.items.length;
     }
@@ -35,10 +33,13 @@
           registry: 'noprop',
           template: 'noprop',
           children: 'noprop',
-          childType: 'noprop'
+          childType: 'noprop',
+          beforeRender: 'noprop',
+          afterRender: 'noprop'
         });
 
         this.models.load();
+        this.items = this.models.filter(this.filter[0]);
       }
     },
 
@@ -77,7 +78,7 @@
         this.addChildView(this.items[i]);
       }
 
-      this.models.core.on(function (event) {
+      this.items.core.on(function (event) {
         var op    = event.args[0],
             ind   = event.args[1],
             ov    = event.args[2],
@@ -96,23 +97,32 @@
         } else if (op === operations.remove) {
           // TODO
         } else if (op === operations.splice) {
+
+          if (ov) {
+            ln = ov.length;
+
+            for (i = 0; i < ln; i++) {
+              view.children[ov[i].uuid()].destroy();
+              delete view.children[ov[i].uuid()];
+            }
+
+            if (view.models._array.length < Object.keys(view.children).length) {
+              for (i in view.children) {
+                ov = view.children[i];
+                if (ov.model.isDestroyed) {
+                  ov.destroy();
+                  delete view.children[i];
+                }
+              }
+            }
+          }
+
           if (nv) {
             nvs = slice.call(nv, 0);
             ln = nvs.length;
 
             for (i = 0; i < ln; i++) {
               view.addChildView(nvs[i]);
-            }
-
-          }
-
-          if (ov) {
-            ovs = slice.call(ov, 0);
-            ln = ovs.length;
-
-            for (i = 0; i < ln; i++) {
-              view.children[ovs[i].uuid()].destroy();
-              delete view.children[ovs[i].uuid()];
             }
           }
         }
