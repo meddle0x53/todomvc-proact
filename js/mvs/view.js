@@ -358,7 +358,7 @@
         if (path === '[]') {
           return this.allArrayProps(prop._array, paths.slice(i + 1));
         } else if (path.charAt(0) === '[' && path.charAt(path.length - 1) === ']') {
-          return this.arrayFilter(prop._array, path.substring(1, path.length - 1), paths.slice(i + 1).join('.'));
+          return this.arrayFilter(prop, path.substring(1, path.length - 1), paths.slice(i + 1).join('.'));
         }
 
         prop = prop[path];
