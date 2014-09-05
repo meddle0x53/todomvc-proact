@@ -38,7 +38,8 @@
           children: 'noprop',
           childType: 'noprop',
           beforeRender: 'noprop',
-          afterRender: 'noprop'
+          afterRender: 'noprop',
+          multyStreams: 'noprop'
         });
 
         this.models.load();
