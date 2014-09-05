@@ -1,12 +1,15 @@
 (function( window, $, ProAct ) {
   'use strict';
 
+  ProAct.registry.store('l:truth', function () {
+    return true;
+  });
+
+
   ProAct.Views = ProAct.Views || ProAct.View.extend({
     $itemsEl: null,
     children: {},
-    filter: [function () {
-      return true;
-    }],
+    filter: 'l:truth',
     template: null,
     type: 'views',
     childType: null,
@@ -39,7 +42,11 @@
         });
 
         this.models.load();
-        this.items = this.models.filter(this.filter[0]);
+        this.items = this.models.filter(this.regRead('l:truth'));
+
+        this.p('filter').on(function (e) {
+          e.args[0].items.core.filteringListener(e.args[0].regRead(e.args[2]));
+        });
       }
     },
 
