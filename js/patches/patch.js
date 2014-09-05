@@ -119,15 +119,20 @@
       registry = null;
     }
 	
+    var filterFunc;
     if (P.U.isString(filter)) {
       if (!registry && ProAct.registry) {
         registry = ProAct.registry;
       }
-      filter = registry.get(filter);
+      filterFunc = registry.get(filter);
+
+      if (!filterFunc && ProAct.registry) {
+        filterFunc = ProAct.registry.get(filter);
+      }
     }
 
     this.original = array;
-    this.array = array.filter(filter);
+    this.array = array.filter(filterFunc);
     this.propertyPath = propertyPath;
 	};
 
