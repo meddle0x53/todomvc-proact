@@ -106,7 +106,9 @@
     itemsEl: 'ul',
     itemsId: 'todo-list',
     childType: app.TaskView,
-    doneAll: undefined,
+    doneAll: function () {
+      return this.models.every(this.regRead('l:done'));
+    },
     completedItems: function () {
       return this.models.filter(function (item) {
         return item.done;
@@ -164,6 +166,9 @@
           return 'selected';
         }
         return ProAct.Event.simple('array', 'del', 'selected');
+      },
+      toggleAllValue: function (e) {
+        return $(e.target).prop('checked');
       }
     },
     streams: {
@@ -171,12 +176,16 @@
         click: [
           ['map(true)', 'models.[l:done].shouldDestroy']
         ]
+      },
+      'input#toggle-all': {
+        change: [
+          ['map(l:toggleAllValue)', 'models.[l:truth].done']
+        ]
       }
     },
     pipes: [
       ['completedItems', 'map(l:completedCountToClass)', 'btnCompletedClasses'],
       ['models', 'map(l:itemsCountToClass)', 'footerClass'],
-      ['doneAll', 'filter(defined)', 'models.[].done'],
       ['filter', 'map(l:doneFilter)', 'completedSelected'],
       ['filter', 'map(l:activeFilter)', 'activeSelected'],
       ['filter', 'map(l:allFilter)', 'allSelected']
