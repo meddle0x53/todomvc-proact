@@ -273,6 +273,10 @@
     return event.args[0][event.target] !== undefined;
   };
 
+  ProAct.DSL.predefined.filtering.original = function (event) {
+    return event.source === undefined;
+  };
+
   ProAct.DSL.predefined.mapping['true'] = function (event) {
     return true;
   };
