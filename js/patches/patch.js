@@ -119,7 +119,7 @@
       registry = null;
     }
 	
-    var filterFunc;
+    var filterFunc = filter;
     if (P.U.isString(filter)) {
       if (!registry && ProAct.registry) {
         registry = ProAct.registry;
