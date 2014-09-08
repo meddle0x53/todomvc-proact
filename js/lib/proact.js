@@ -2119,6 +2119,7 @@
 	      for (i = 0; i < ln; i++) {
           listenersForAction = this.listeners[actions[i]];
 
+          // PATCH
           if (listenersForAction) {
             listeners = listeners.concat(listenersForAction);
           }
