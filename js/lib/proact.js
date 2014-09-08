@@ -2103,7 +2103,8 @@
 	        listener,
 	        listeners,
 	        length,
-	        event;
+	        event,
+          listenersForAction;
 	
 	    if (P.U.isString(actions)) {
 	      listeners = this.listeners[actions];
@@ -2116,9 +2117,14 @@
 	      }
 	
 	      for (i = 0; i < ln; i++) {
-	        listeners = listeners.concat(this.listeners[actions[i]]);
+          listenersForAction = this.listeners[actions[i]];
+
+          if (listenersForAction) {
+            listeners = listeners.concat(listenersForAction);
+          }
 	      }
 	    }
+
 	
 	    if (listeners.length === 0 && this.parent === null) {
 	      return this;
