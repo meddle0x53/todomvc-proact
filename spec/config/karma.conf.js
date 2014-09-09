@@ -15,6 +15,7 @@ module.exports = function(karma) {
       'js/mvs/view.js',
       'js/mvs/new_view.js',
       'js/mvs/views.js',
+      'js/mvs/router.js',
       'js/app.js',
       'spec/spec_helper.js',
       'spec/unit/**/*.spec.js',

@@ -21,6 +21,7 @@ describe('ProAct.Storage, ProAct.Model and ProAct.Models', function () {
         return result;
       }
     });
+    Task.type = 'Task';
 
   });
 
