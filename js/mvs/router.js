@@ -50,11 +50,12 @@
       var realPath = path || this.currentPath(),
           i, ln = this.routes.length,
           route, match;
+      realPath = realPath.substring(this.root.length - 1);
 
       for (i = 0; i < ln; i++) {
         route = this.routes[i];
 
-        if (realPath === '' && route.path === '') {
+        if ((realPath === '' || realPath === '/index.html') && route.path === '') {
           match = [''];
         } else if (route.path !== '') {
           match = realPath.match(route.path);
