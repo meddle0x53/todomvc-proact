@@ -1,6 +1,5 @@
 (function(window, ProAct) {
 	'use strict';
-  // TODO There should be applicatio class - setting up the routing, fixing types, etc.
 
   window.app = window.app || {};
 
@@ -48,7 +47,7 @@
         return event.keyCode === 27;
       },
       val: function (event) {
-        return $(event.target).prop('value');
+        return $(event.target).prop('value').trim();
       },
       focus: function () {
         this.$el.find('input.edit').focus();
@@ -89,11 +88,15 @@
       enter: function (event) {
         return event.keyCode === 13;
       },
+      trim: function (event) {
+        return $(event.target).prop('value').trim();
+      }
     },
     streams: {
       'input#new-todo': {
         keydown: [
-          ['filter(l:enter)|map(true)', 'shouldCreate'],
+          ['filter(l:enter)|map(l:trim)', 'description'],
+          ['filter(l:enter)|map(true)', 'shouldCreate']
         ]
       },
     },
@@ -220,7 +223,7 @@
   };
 
 
-  window.app.router = new ProAct.Router();
+  window.app.router = new ProAct.Router('/labs/architecture-examples/proact/');
   window.app.router
     .route(function () {
       window.app.getTaskListView('l:truth');
