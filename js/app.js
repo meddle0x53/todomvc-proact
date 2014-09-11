@@ -1,5 +1,6 @@
 (function(window, ProAct) {
 	'use strict';
+  // TODO There should be applicatio class - setting up the routing, fixing types, etc.
 
   window.app = window.app || {};
 
