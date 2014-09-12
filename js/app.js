@@ -54,6 +54,9 @@
       },
       restore: function () {
         this.$el.find('input.edit').val(this.description);
+      },
+      empty: function (val) {
+        return val === '';
       }
     },
     streams: {
@@ -65,9 +68,13 @@
           ['filter(l:enter)|map(l:val)', 'description'],
           ['filter(l:enter)|map(pop)', 'classes'],
           ['filter(l:esc)|map(pop)', 'classes'],
-          ['filter(l:enter)', 'model.doSave']
+          ['filter(l:enter)', 'model.doSave'],
+          ['filter(l:enter)|map(l:val)|filter(l:empty)|map(true)', 'model.shouldDestroy'],
         ],
-        blur: ['filter(l:isEditing)|map(pop)', 'classes']
+        blur: [
+          ['filter(l:isEditing)|map(l:val)', 'description'],
+          ['filter(l:isEditing)|map(pop)', 'classes']
+        ]
       },
       'button.destroy': {
         click: ['map(true)', 'model.shouldDestroy']
@@ -111,7 +118,11 @@
     itemsId: 'todo-list',
     childType: app.TaskView,
     doneAll: function () {
-      return this.models.every(this.regRead('l:done'));
+      var every =  this.models.every(this.regRead('l:done'));
+      if (every && this.models.length === 0) {
+        every = false;
+      }
+      return every;
     },
     completedItems: function () {
       return this.models.filter(function (item) {
