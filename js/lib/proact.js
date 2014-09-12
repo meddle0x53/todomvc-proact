@@ -5770,10 +5770,14 @@
 	   *      True if all the elements in the <i>this</i> ProAct.Array pass the test implemented by the <i>callback</i>, false otherwise.
 	   * @see {@link ProAct.ArrayCore#addCaller}
 	   */
-	  every: function () {
+	  every: function (fun, thisArg) {
+      // PATCH
 	    this.core.addCaller();
+      if (this.core.isComplex) {
+        fun = this.core.actionFunction(fun);
+      }
 	
-	    return every.apply(this._array, arguments);
+	    return every.call(this._array, fun, thisArg);
 	  },
 	
 	  /**
