@@ -95,6 +95,12 @@
 	 * @namespace ProAct.Utils
 	 */
 	ProAct.Utils = Pro.U = {
+	  uuid: function () {
+	    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+	      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+	        return v.toString(16);
+	    });
+	  },
 	
 	  /**
 	   * Checks if the passed value is a function or not.
@@ -231,6 +237,13 @@
 	    return P.U.isProObject(value) && value.__pro__.properties.v !== undefined;
 	  },
 	
+	  clone: function (obj) {
+	    if (P.U.isArray(obj)) {
+	      return obj.slice(0);
+	    }
+	    return obj;
+	  },
+	
 	  /**
 	   * Extends the destination object with the properties and methods of the source object.
 	   *
@@ -245,12 +258,33 @@
 	   */
 	  ex: function(destination, source) {
 	    var p;
+	
 	    for (p in source) {
 	      if (source.hasOwnProperty(p)) {
-	        destination[p] = source[p];
+	        destination[p] = P.U.clone(source[p]);
 	      }
 	    }
 	    return destination;
+	  },
+	
+	  extendClass: function (data) {
+	    var parent = this,
+	        child = function () {
+	          parent.apply(this, slice.call(arguments));
+	        };
+	
+	    P.U.ex(child, parent);
+	
+	    child.initData = {};
+	    P.U.ex(child.initData, parent.initData);
+	
+	    P.U.ex(child.prototype, parent.prototype);
+	    P.U.ex(child.initData, data);
+	
+	    child.uuid = P.U.uuid();
+	    child.prototype.constructor = child;
+	
+	    return child;
 	  },
 	
 	  /**
@@ -1799,14 +1833,7 @@
 	   * @see {@link ProAct.Observable#into}
 	   */
 	  out: function (destination) {
-      if (P.U.isArray(destination)) {
-        var self = this;
-        destination.forEach(function (observable) {
-          self.out(observable);
-        });
-      } else {
-        destination.into(this);
-      }
+	    destination.into(this);
 	
 	    return this;
 	  },
@@ -2103,8 +2130,7 @@
 	        listener,
 	        listeners,
 	        length,
-	        event,
-          listenersForAction;
+	        event;
 	
 	    if (P.U.isString(actions)) {
 	      listeners = this.listeners[actions];
@@ -2117,15 +2143,13 @@
 	      }
 	
 	      for (i = 0; i < ln; i++) {
-          listenersForAction = this.listeners[actions[i]];
-
-          // PATCH
-          if (listenersForAction) {
-            listeners = listeners.concat(listenersForAction);
-          }
+	        listenersForAction = this.listeners[actions[i]];
+	
+	        if (listenersForAction) {
+	          listeners = listeners.concat(listenersForAction);
+	        }
 	      }
 	    }
-
 	
 	    if (listeners.length === 0 && this.parent === null) {
 	      return this;
@@ -2178,7 +2202,7 @@
 	      P.flow.pushOnce(listener, listener.call, [event]);
 	    }
 	    return this;
-	  }
+	  },
 	};
 	
 	/**
@@ -2205,6 +2229,53 @@
 	  this.type = type;
 	  this.args = slice.call(arguments, 3);
 	};
+	
+	P.U.ex(ProAct.Event, {
+	  make: function (source, target, type, data) {
+	    if (type === 'array' || type === P.E.Types.array) {
+	      return P.E.makeArray(data[0], data.slice(1));
+	    }
+	  },
+	
+	  makeArray: function (source, target, type, data) {
+	    var eventType = P.E.Types.array, arr;
+	    if (type === 'remove' || type === P.A.Operations.remove) {
+	      return new P.E(source, target, eventType, P.A.Operations.remove, data[0], data[1], data[2]);
+	    }
+	
+	    if (type === 'splice' || type === P.A.Operations.splice) {
+	      if (!P.U.isArray(data[1])) {
+	        data[1] = new Array(data[1]);
+	      }
+	
+	      return new P.E(source, target, eventType, P.A.Operations.splice, data[0], data[1], data[2]);
+	    }
+	  },
+	
+	  simple: function (eventType, subType, value, array) {
+	    if ((eventType === 'array' || eventType === 'a') && (subType === 'pop' || subType === 'shift')) {
+	      return P.E.makeArray(null, null, 'remove', [subType === 'shift' ? 0 : 1]);
+	    }
+	
+	    if ((eventType === 'array' || eventType === 'a') && (subType === 'splice')) {
+	      return P.E.makeArray(null, null, 'splice', [value, 1]);
+	    }
+	
+	    if ((eventType === 'array' || eventType === 'a') && (subType === 'deleteElement' || subType === 'del')) {
+	      if (array) {
+	        var index = array.indexOf(value);
+	
+	        if (index !== -1) {
+	          return P.E.makeArray(null, array, 'splice', [index, 1]);
+	        }
+	      } else {
+	        return P.E.makeArray(null, array, 'splice', [null, [value]]);
+	      }
+	    }
+	
+	    return null;
+	  }
+	});
 	
 	/**
 	 * Defines the possible types of the ProAct.Events.
@@ -3461,7 +3532,7 @@
 	            newVal = newVal.args[0][newVal.target];
 	          }
 	
-            self.set(newVal);
+	          self.set(newVal);
 	          //self.oldVal = self.val;
 	          //self.val = P.Observable.transform(self, newVal);
 	        }
@@ -3882,12 +3953,11 @@
 	            if (!self.val.__pro__) {
 	              P.prob(self.val);
 	            }
-
-              // PATCH
-              if (P.U.isArray(this)) {
-                self.update();
-                return;
-              }
+	
+	            if (P.U.isArray(this)) {
+	              self.update();
+	              return;
+	            }
 	
 	            var oldProps = self.oldVal.__pro__.properties,
 	                newProps = self.val.__pro__.properties,
@@ -3904,6 +3974,7 @@
 	                newListeners = newProp.listeners.change;
 	
 	                oldProp = oldProps[oldPropName];
+	                oldListeners = oldProp.listeners.change;
 	                oldListenersLength = oldListeners.length;
 	
 	                for (i = 0; i < oldListenersLength; i++) {
@@ -4174,7 +4245,6 @@
 	      return;
 	    }
 	
-      // PATCH
 	    target.update();
 	  };
 	
@@ -5161,10 +5231,9 @@
 	        meta = [meta];
 	      }
 	
-        // PATCH
-        if (!(meta[0] instanceof ProAct.Property)) {
-          P.registry.setup.apply(P.registry, [result].concat(meta));
-        }
+	      if (!(meta[0] instanceof ProAct.Property)) {
+	        P.registry.setup.apply(P.registry, [result].concat(meta));
+	      }
 	    }
 	
 	    return result;
@@ -5237,6 +5306,109 @@
 	   */
 	  constructor: ProAct.ArrayCore,
 	
+	  actionFunction: function (fun) {
+	    var core = this;
+	    return function () {
+	      var oldCaller = P.currentCaller,
+	          i = arguments[1], res;
+	
+	      P.currentCaller = core.indexListener(i);
+	      res = fun.apply(this, slice.call(arguments, 0));
+	      P.currentCaller = oldCaller;
+	
+	      return res;
+	    };
+	  },
+	
+	  indexListener: function (i) {
+	    if (!this.indexListeners) {
+	      this.indexListeners = {};
+	    }
+	
+	    var core = this,
+	        shell = core.shell;
+	    if (!this.indexListeners[i]) {
+	      this.indexListeners[i] = {
+	        call: function (source) {
+	          core.makeListener(new P.E(source, shell, P.E.Types.array, [
+	            P.A.Operations.set, i, shell._array[i], shell._array[i]
+	          ]));
+	        },
+	        property: core
+	      };
+	    }
+	
+	    return this.indexListeners[i];
+	  },
+	
+	  makeListener: function () {
+	    if (!this.listener) {
+	      var self = this.shell;
+	      this.listener =  function (event) {
+	        if (!event || !(event instanceof P.E)) {
+	          self.push(event);
+	
+	          return;
+	        }
+	
+	        if (event.type === P.E.Types.value) {
+	          self.push(event.args[2]);
+	
+	          return;
+	        }
+	
+	        var op    = event.args[0],
+	            ind   = event.args[1],
+	            ov    = event.args[2],
+	            nv    = event.args[3],
+	            nvs,
+	            operations = P.Array.Operations;
+	
+	        if (op === operations.set) {
+	          self[ind] = nv;
+	        } else if (op === operations.add) {
+	          nvs = slice.call(nv, 0);
+	          if (ind === 0) {
+	            pArrayProto.unshift.apply(self, nvs);
+	          } else {
+	            pArrayProto.push.apply(self, nvs);
+	          }
+	        } else if (op === operations.remove) {
+	          if (ind === 0) {
+	            self.shift();
+	          } else {
+	            self.pop();
+	          }
+	        } else if (op === operations.setLength) {
+	          self.length = nv;
+	        } else if (op === operations.reverse) {
+	          self.reverse();
+	        } else if (op === operations.sort) {
+	          if (P.U.isFunction(nv)) {
+	            self.sort(nv);
+	          } else {
+	            self.sort();
+	          }
+	        } else if (op === operations.splice) {
+	          if (nv) {
+	            nvs = slice.call(nv, 0);
+	          } else {
+	            nvs = [];
+	          }
+	          if (ind === null || ind === undefined) {
+	            ind = self.indexOf(ov[0]);
+	            if (ind === -1) {
+	              return;
+	            }
+	          }
+	          pArrayProto.splice.apply(self, [ind, ov.length].concat(nvs));
+	        }
+	      };
+	    }
+	
+	    return this.listener;
+	  },
+	
 	  /**
 	   * Generates the initial listeners object.
 	   * It is used for resetting all the listeners too.
@@ -5305,10 +5477,10 @@
 	   *      The event.
 	   */
 	  makeEvent: function (source, eventData) {
-      if (!eventData) {
-        return new P.E(source, this.shell, P.E.Types.array, pArrayOps.setLength, -1, this.shell.length, this.shell.length);
-      }
-
+	    if (!eventData) {
+	      return new P.E(source, this.shell, P.E.Types.array, pArrayOps.setLength, -1, this.shell.length, this.shell.length);
+	    }
+	
 	    var op = eventData[0],
 	        ind = eventData[1],
 	        oldVal = eventData[2],
@@ -5509,11 +5681,10 @@
 	    } else if (isF(array[i])) {
 	    } else if (array[i] === null) {
 	    } else if (isO(array[i])) {
-        // PATCH
-        this.isComplex = true;
+	      this.isComplex = true;
 	      new P.ObjectProperty(array, i);
 	    }
-
+	
 	    Object.defineProperty(proArray, i, {
 	      enumerable: true,
 	      configurable: true,
@@ -5771,11 +5942,10 @@
 	   * @see {@link ProAct.ArrayCore#addCaller}
 	   */
 	  every: function (fun, thisArg) {
-      // PATCH
 	    this.core.addCaller();
-      if (this.core.isComplex) {
-        fun = this.core.actionFunction(fun);
-      }
+	    if (this.core.isComplex) {
+	      fun = this.core.actionFunction(fun);
+	    }
 	
 	    return every.call(this._array, fun, thisArg);
 	  },
@@ -5871,7 +6041,7 @@
 	
 	    return forEach.apply(this._array, arguments);
 	  },
-
+	
 	  /**
 	   * The <b>filter()</b> method creates a new ProAct.Array with all elements that pass the test implemented by the provided function.
 	   * <p>
@@ -5890,17 +6060,16 @@
 	   * @see {@link ProAct.Array.Listeners.filter}
 	   * @see {@link ProAct.Array.reFilter}
 	   */
-	  filter: function (fun, thisArg) {
-      // PATCH
-      if (this.core.isComplex) {
-        fun = this.core.actionFunction(fun);
-      }
-
+	  filter: function (fun, thisArg, isComplex) {
+	    if (this.core.isComplex || isComplex) {
+	      fun = this.core.actionFunction(fun);
+	    }
+	
 	    var filtered = new P.A(filter.apply(this._array, arguments)),
-          listener = pArrayLs.filter(filtered, this, arguments);
+	        listener = pArrayLs.filter(filtered, this, arguments);
 	    this.core.on(listener);
-
-      filtered.core.filteringListener = listener;
+	
+	    filtered.core.filteringListener = listener;
 	
 	    return filtered;
 	  },
@@ -6978,15 +7147,13 @@
 	   */
 	  filter: function (filtered, original, args) {
 	    var fun = args[0], thisArg = args[1];
-
 	    return function (event) {
-        // PATCH
-        if (P.U.isFunction(event)) {
-          args[0] = fun = event;
-          pArray.reFilter(original, filtered, args);
-          return;
-        }
-
+	      if (P.U.isFunction(event)) {
+	        args[0] = fun = event;
+	        pArray.reFilter(original, filtered, args);
+	        return;
+	      }
+	
 	      pArrayLs.check(event);
 	      var op  = event.args[0],
 	          ind = event.args[1],
@@ -7884,7 +8051,7 @@
 	 * @static
 	 * @param {Object} object
 	 *      The object/value to make decorator to the <i>target</i>.
-	 * @param {Object} object
+	 * @param {Object} target
 	 *      The object to decorate.
 	 * @param {Object|String} meta
 	 *      Meta-data used to help in the reactive object creation for the proxy.
@@ -8331,16 +8498,15 @@
 	            }
 	          }
 	
-            // PATCH
-            if (!actionObject[name]) {
-              actionObject[name] = opArguments;
-            } else {
-              if (!P.U.isArray(actionObject[name][0])) {
-                actionObject[name] = [actionObject[name], opArguments];
-              } else {
-                actionObject[name].push(opArguments);
-              }
-            }
+	          if (!actionObject[name]) {
+	            actionObject[name] = opArguments;
+	          } else {
+	            if (!P.U.isArray(actionObject[name][0])) {
+	              actionObject[name] = [actionObject[name], opArguments];
+	            } else {
+	              actionObject[name].push(opArguments);
+	            }
+	          }
 	
 	          actionObject.order = actionObject.order || [];
 	          actionObject.order.push(name);
@@ -8349,14 +8515,13 @@
 	          if (!actionObject || !actionObject[name]) {
 	            return object;
 	          }
-            var args;
 	
-            args = actionObject[name];
-            if (!P.U.isArray(args)) {
-              args = [args];
-            }
-
-            return object[name].apply(object, args);
+	          var args = actionObject[name];
+	          if (!P.U.isArray(args)) {
+	            args = [args];
+	          }
+	
+	          return object[name].apply(object, args);
 	        }
 	      };
 	    }
@@ -8696,6 +8861,22 @@
 	            return p;
 	          }
 	        };
+	      },
+	
+	      pop: function () {
+	        return P.E.simple('array', 'pop');
+	      },
+	
+	      shift: function () {
+	        return P.E.simple('array', 'shift');
+	      },
+	
+	      eventToVal: function (event) {
+	        return event.args[0][event.target];
+	      },
+	
+	      'true': function (event) {
+	        return true;
 	      }
 	    },
 	
@@ -8771,7 +8952,15 @@
 	       * @method
 	       * @see {@link ProAct.DSL.ops.filter}
 	       */
-	      '-': function (el) { return el <= 0; }
+	      '-': function (el) { return el <= 0; },
+	
+	      defined: function (event) {
+	        return event.args[0][event.target] !== undefined;
+	      },
+	
+	      originalEvent: function (event) {
+	        return event.source === undefined;
+	      }
 	    },
 	
 	    /**
@@ -8973,7 +9162,7 @@
 	    var isS = P.U.isString,
 	        args = slice.call(arguments, 3),
 	        option, i, ln, opType, oldOption,
-          multiple = {};
+	        multiple = {};
 	
 	    if (options && isS(options)) {
 	      options = dsl.optionsFromString.apply(null, [options].concat(args));
@@ -8983,35 +9172,35 @@
 	      options = {into: options};
 	    }
 	
-      // PATCH
+	    // PATCH
 	    if (options && options.order) {
 	      ln = options.order.length;
 	      for (i = 0; i < ln; i++) {
 	        option = options.order[i];
 	        if (opType = dslOps[option]) {
 	          if (registry) {
-              if (options.order.indexOf(option) !== options.order.lastIndexOf(option)) {
-                if (multiple[option] === undefined) {
-                  multiple[option] = -1;
-                }
-                multiple[option] = multiple[option] + 1;
-                oldOption = options[option];
-                options[option] = options[option][multiple[option]];
-              }
+	            if (options.order.indexOf(option) !== options.order.lastIndexOf(option)) {
+	              if (multiple[option] === undefined) {
+	                multiple[option] = -1;
+	              }
+	              multiple[option] = multiple[option] + 1;
+	              oldOption = options[option];
+	              options[option] = options[option][multiple[option]];
+	            }
 	            options[option] = registry.toObjectArray(options[option]);
 	          }
 	
 	          opType.action(observable, options);
-            if (oldOption) {
-              options[option] = oldOption;
-              oldOption = undefined;
-
-              if (multiple[option] >= options[option].length - 1) {
-                delete options[option];
-              }
-            } else {
-              delete options[option];
-            }
+	          if (oldOption) {
+	            options[option] = oldOption;
+	            oldOption = undefined;
+	
+	            if (multiple[option] >= options[option].length - 1) {
+	              delete options[option];
+	            }
+	          } else {
+	            delete options[option];
+	          }
 	        }
 	      }
 	    }

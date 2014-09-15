@@ -127,12 +127,12 @@
     completedItems: function () {
       return this.models.filter(function (item) {
         return item.done;
-      });
+      }, null, true);
     },
     leftItems: function () {
       return this.models.filter(function (item) {
         return !item.done;
-      });
+      }, null, true);
     },
     completed: function () {
       var ln = this.completedItems.length;
