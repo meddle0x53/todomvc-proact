@@ -135,8 +135,17 @@
           }
         }
       });
+    },
+
+    setFilter: function (filter) {
+      if (filter) {
+        if (P.U.isFunction(filter)) {
+          this.items.core.filteringListener(filter);
+        } else {
+          this.filter = filter;
+        }
+      }
     }
   });
 
 })(window, $, ProAct);
-
