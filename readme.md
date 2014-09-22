@@ -1,27 +1,26 @@
-# Framework Name TodoMVC Example
+# ProAct.js TodoMVC Example
 
-> Short description of the framework provided by the official website.
+> Reactive JavaScript Object Properties.
 
-> _[Framework Name - framework.com](link-to-framework)_
+> _[ProAct.js - proactjs.github.io](http://proactjs.github.io)_
 
 
-## Learning Framework Name
+## Learning ProAct.js
 
-The [Framework Name website]() is a great resource for getting started.
+The [ProAct.js website](http://proactjs.github.io) is a great resource for getting started.
 
 Here are some links you may find helpful:
 
-* [Documentation]()
-* [API Reference]()
-* [Applications built with Framework Name]()
-* [Blog]()
-* [FAQ]()
-* [Framework Name on GitHub]()
+* [Documentation TODO]()
+* [API Reference](http://proactjs.github.io/doc/index.html)
+* [Applications built with ProAct.js TODO]()
+* [Blog](http://proactjs.github.io/pages/news.html)
+* [FAQ TODO]()
+* [Framework Name on GitHub](https://github.com/proactjs/proactjs)
 
 Articles and guides from the community:
 
-* [Article 1]()
-* [Article 2]()
+TODO
 
 Get help from other Framework Name users:
 
