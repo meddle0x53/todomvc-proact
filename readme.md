@@ -16,18 +16,18 @@ Here are some links you may find helpful:
 * [Applications built with ProAct.js TODO]()
 * [Blog](http://proactjs.github.io/pages/news.html)
 * [FAQ TODO]()
-* [Framework Name on GitHub](https://github.com/proactjs/proactjs)
+* [ProAct.js on GitHub](https://github.com/proactjs/proactjs)
 
 Articles and guides from the community:
 
 TODO
 
-Get help from other Framework Name users:
+Get help from other ProAct.js users:
 
-* [Framework Name on StackOverflow](http://stackoverflow.com/questions/tagged/____)
+* [ProAct.js on StackOverflow](http://stackoverflow.com/questions/tagged/____)
 * [Mailing list on Google Groups]()
-* [Framework Name on Twitter](http://twitter.com/____)
-* [Framework Name on Google +]()
+* [ProAct.js on Twitter](http://twitter.com/____)
+* [ProAct.js on Google +]()
 
 _If you have other helpful links to share, or find any of the links above no longer work, please [let us know](https://github.com/tastejs/todomvc/issues)._
 
@@ -41,9 +41,9 @@ How is the app structured? Are there deviations from the spec? If so, why?
 
 If there is a build step required to get the example working, explain it here.
 
-To run the app, spin up an HTTP server and visit http://localhost/.../myexample/.
+To run the app, spin up an HTTP server and visit http://localhost/.../proactjs/.
 
 
 ## Credit
 
-This TodoMVC application was created by [you]().
+This TodoMVC application was created by [meddle]().
