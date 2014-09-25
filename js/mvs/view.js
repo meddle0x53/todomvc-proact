@@ -142,7 +142,7 @@
 
     setupBindings: function () {
       var view = this,
-          $bindings = this.$el.find('[pro-bind]');
+          $bindings = this.$el.find('[pro-bind]').add(this.$el.filter('[pro-bind]'));
 
       $bindings.each(function () {
         var $binding = $(this),
@@ -166,48 +166,13 @@
           return;
         }
 
-        // ->
-        view.p(property).on(function () {
-          if (updating) {
-            return;
-          }
-
-          if (tag !== 'input') {
-            safe ? $binding.html(view[property]) : $binding.text(view[property]);
-          } else if ($binding.attr('type') === 'checkbox') {
-            $binding.prop('checked', view[property]);
-          } else {
-            $binding.prop('value', view[property]);
-          }
-        });
-
-        // sync
-        view.p(property).update();
+        ProAct.Bindings.onProp($binding, view, property, safe);
 
         if (oneWay) {
           return;
         }
 
-        // <-
-        if ($binding.attr('type') === 'checkbox') {
-          $binding.on('change', function () {
-            try {
-              updating = true;
-              view[property] = $binding.prop('checked');
-            } finally {
-              updating = false;
-            }
-          });
-        } else {
-          $binding.on('keydown', function () {
-            try {
-              updating = true;
-              view[property] = $binding.prop('value');
-            } finally {
-              updating = false;
-            }
-          });
-        }
+        ProAct.Bindings.onChange($binding, view, property);
       });
 
       $bindings = this.$el.find('[pro-class]');
@@ -289,7 +254,7 @@
         this.$parent.append(this.$el);
       }
 
-      if (this.model && !this.parentView) {
+      if (this.model && !this.parentView && this.model.p('isDestroyed')) {
         this.model.p('isDestroyed').on(function (e) {
           view.destroy();
         });
