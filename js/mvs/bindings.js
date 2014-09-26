@@ -11,10 +11,12 @@
 
   function addBinding (binding) {
     bindings.push(binding);
+    return binding;
   }
 
   function prepBinding (binding) {
     bindings.unshift(binding);
+    return binding;
   }
 
   function delBinding (binding) {
@@ -74,6 +76,28 @@
     });
   }
 
+  function addInputBinding (bindingDefinition) {
+    var binding = {
+      filter: function ($binding, tag) {
+        return tag === 'input' &&
+          (bindingDefinition.type ?
+           $binding.attr('type') === bindingDefinition.type : true);
+      },
+      onProp: function ($binding, view, property, safe) {
+        $binding.prop(bindingDefinition.prop, view[property]);
+      },
+      change: function ($binding, view, property) {
+        view[property] = $binding.prop(bindingDefinition.prop);
+      },
+      onChange: function ($binding, view, property) {
+        jqOn(this, $binding, bindingDefinition.event, view, property);
+      }
+    };
+
+
+    return addBinding(binding);
+  }
+
   ProAct.Bindings = {
     addBinding : addBinding,
     prepBinding : prepBinding,
@@ -84,34 +108,15 @@
   };
 
   // TODO to their own file!
-  addBinding({
-    filter: function ($binding, tag) {
-      return tag === 'input' && $binding.attr('type') === 'checkbox';
-    },
-    onProp: function ($binding, view, property, safe) {
-      $binding.prop('checked', view[property]);
-    },
-    change: function ($binding, view, property) {
-      view[property] = $binding.prop('checked');
-    },
-    onChange: function ($binding, view, property) {
-      jqOn(this, $binding, 'change', view, property);
-    }
+  addInputBinding({
+    type: 'checkbox',
+    prop: 'checked',
+    event: 'change'
   });
 
-  addBinding({
-    filter: function ($binding, tag) {
-      return tag === 'input';
-    },
-    onProp: function ($binding, view, property, safe) {
-      $binding.prop('value', view[property]);
-    },
-    change: function ($binding, view, property) {
-      view[property] = $binding.prop('value');
-    },
-    onChange: function ($binding, view, property) {
-      jqOn(this, $binding, 'keydown', view, property);
-    }
+  addInputBinding({
+    prop: 'value',
+    event: 'keydown'
   });
 
 })( window, ProAct );
