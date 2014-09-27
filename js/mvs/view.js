@@ -96,98 +96,8 @@
       return !!this.$el;
     },
 
-    classesListener: function ($el) {
-      var v = this;
-      return function (event) {
-        var op    = event.args[0],
-            ind   = event.args[1],
-            ov    = event.args[2],
-            nv    = event.args[3],
-            nvs, i, ln,
-            slice = Array.prototype.slice,
-            operations = ProAct.Array.Operations;
-
-        if (op === operations.add) {
-          nvs = slice.call(nv, 0);
-          ln = nvs.length;
-          for (i = 0; i < ln; i++) {
-            $el.addClass(nvs[i]);
-          }
-        } else if (op === operations.remove) {
-
-          $el.removeClass(ov);
-        } else if (op === operations.splice) {
-          nvs = slice.call(nv, 0);
-          ln = nvs.length;
-
-          for (i = 0; i < ln; i++) {
-            $el.addClass(nvs[i]);
-          }
-
-          ln = ov.length;
-
-          for (i = 0; i < ln; i++) {
-            $el.removeClass(ov[i]);
-          }
-        }
-      };
-    },
-
-    setupClasses: function () {
-      if (this.classes === null) {
-        this.classes = [];
-      }
-      this.classes.core.on(this.classesListener(this.$el));
-    },
-
     setupBindings: function () {
-      var view = this,
-          $bindings = this.$el.find('[pro-bind]').add(this.$el.filter('[pro-bind]'));
-
-      $bindings.each(function () {
-        var $binding = $(this),
-            property = $binding.attr('pro-bind'),
-            tag = $binding.prop('tagName').toLowerCase(),
-            oneWay = (tag !== 'input'),
-            safe = false,
-            updating = false;
-
-        if (property.substring(0, 7) === 'one-way') {
-          property = property.substring(8);
-          oneWay = true;
-        }
-
-        if (property.substring(0, 4) === 'safe') {
-          property = property.substring(5);
-          safe = true;
-        }
-
-        if (!view.p(property)) {
-          return;
-        }
-
-        ProAct.Bindings.onProp($binding, view, property, safe);
-
-        if (oneWay) {
-          return;
-        }
-
-        ProAct.Bindings.onChange($binding, view, property);
-      });
-
-      $bindings = this.$el.find('[pro-class]');
-      $bindings.each(function () {
-        var $binding = $(this),
-            property = $binding.attr('pro-class'),
-            prop = view[property];
-
-        if (!prop) {
-          view.p().set(property, []);
-          prop = view[property];
-        }
-
-        prop.core.on(view.classesListener($binding));
-      });
+      ProAct.Bindings.setup(this);
     },
 
     setupStreams: function () {
@@ -274,7 +184,6 @@
       }
 
       this.beforeRender(this.$el);
-      this.setupClasses();
       this.setupBindings();
       this.setupStreams();
       this.setupPipes();
@@ -288,7 +197,7 @@
     },
 
     allArrayProps: function (array, paths) {
-      var i, ln = array.length, 
+      var i, ln = array.length,
           props = [],
           path = paths.join('.');
 
