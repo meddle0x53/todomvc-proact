@@ -94,8 +94,107 @@
       }
     };
 
-
     return addBinding(binding);
+  }
+
+  function setupBinding ($binding, view) {
+    var property = $binding.attr('pro-bind'),
+        tag = $binding.prop('tagName').toLowerCase(),
+        oneWay = (tag !== 'input'),
+        safe = false;
+
+    if (property.substring(0, 7) === 'one-way') {
+      property = property.substring(8);
+      oneWay = true;
+    }
+
+    if (property.substring(0, 4) === 'safe') {
+      property = property.substring(5);
+      safe = true;
+    }
+
+    if (!view.p(property)) {
+      return;
+    }
+
+    ProAct.Bindings.onProp($binding, view, property, safe);
+
+    if (oneWay) {
+      return;
+    }
+
+    ProAct.Bindings.onChange($binding, view, property);
+  }
+
+  function setupClasses(view) {
+    if (view.classes === null) {
+      view.classes = [];
+    }
+    view.classes.core.on(classesListener(view.$el));
+
+    var $bindings = view.$el.find('[pro-class]');
+    $bindings.each(function () {
+      var $binding = $(this),
+          property = $binding.attr('pro-class'),
+          prop = view[property];
+
+      if (!prop) {
+        view.p().set(property, []);
+        prop = view[property];
+      }
+
+      prop.core.on(classesListener($binding));
+    });
+  }
+
+  function classesListener ($el) {
+    return function (event) {
+      var op    = event.args[0],
+          ind   = event.args[1],
+          ov    = event.args[2],
+          nv    = event.args[3],
+          nvs, i, ln,
+          slice = Array.prototype.slice,
+          operations = ProAct.Array.Operations;
+
+      if (op === operations.add) {
+        nvs = slice.call(nv, 0);
+        ln = nvs.length;
+        for (i = 0; i < ln; i++) {
+          $el.addClass(nvs[i]);
+        }
+      } else if (op === operations.remove) {
+        $el.removeClass(ov);
+      } else if (op === operations.splice) {
+        nvs = slice.call(nv, 0);
+        ln = nvs.length;
+
+        for (i = 0; i < ln; i++) {
+          $el.addClass(nvs[i]);
+        }
+
+        ln = ov.length;
+
+        for (i = 0; i < ln; i++) {
+          $el.removeClass(ov[i]);
+        }
+      }
+    };
+  }
+
+  function setup (view) {
+    setupClasses(view);
+
+    var $bindings, type,
+        types = ProAct.Bindings.types;
+
+    for (type in types) {
+      $bindings = view.$el.find('[' + type + ']')
+                        .add(view.$el.filter('[' + type + ']')),
+      $bindings.each(function () {
+        types[type].call(null, $(this), view);
+      });
+    }
   }
 
   ProAct.Bindings = {
@@ -104,7 +203,10 @@
     delBinding : delBinding,
     onProp : onProp,
     onChange : onChange,
-    jqOn: jqOn
+    setup: setup,
+    types: {
+      'pro-bind': setupBinding
+    }
   };
 
   // TODO to their own file!
