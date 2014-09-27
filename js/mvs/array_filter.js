@@ -1,8 +1,8 @@
 (function( window, ProAct ) {
   'use strict';
 
-	ProAct.ArrayFilter = function (array, filter, registry, propertyPath) {
-	  P.Observable.call(this);
+  ProAct.ArrayFilter = function (array, filter, registry, propertyPath) {
+    P.Observable.call(this);
 
     if (!P.U.isProArray(array)) {
       array = new ProAct.Array(array);
@@ -12,7 +12,7 @@
       propertyPath = registry;
       registry = null;
     }
-	
+
     var filterFunc = filter;
     if (P.U.isString(filter)) {
       if (!registry && ProAct.registry) {
@@ -28,19 +28,19 @@
     this.original = array;
     this.array = array.filter(filterFunc);
     this.propertyPath = propertyPath;
-	};
+  };
 
-	ProAct.ArrayFilter.prototype = P.U.ex(Object.create(P.Observable.prototype), {
+  ProAct.ArrayFilter.prototype = P.U.ex(Object.create(P.Observable.prototype), {
     constructor: ProAct.ArrayFilter,
 
     makeEvent: function (source) {
       return source;
     },
 
-	  makeListener: function () {
-	    if (!this.listener) {
-	      var filter = this;
-	      this.listener = function (event) {
+    makeListener: function () {
+      if (!this.listener) {
+        var filter = this;
+        this.listener = function (event) {
           var propertyPath = filter.propertyPath;
           filter.listeners.change = [];
           filter.array._array.forEach(function (el) {
@@ -53,10 +53,10 @@
 
           filter.update(event);
           filter.listeners.change = [];
-	      };
-	    }
-	
-	    return this.listener;
-	  }
+        };
+      }
+
+      return this.listener;
+    }
   });
 })( window, ProAct );
