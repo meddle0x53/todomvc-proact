@@ -59,7 +59,7 @@
         ]
       },
       'button.destroy': {
-        click: ['map(true)', 'model.shouldDestroy']
+        'click.dst': ['map(true)', 'model.shouldDestroy']
       }
     },
     pipes: [
