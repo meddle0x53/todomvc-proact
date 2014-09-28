@@ -112,10 +112,10 @@
           if (ProAct.Utils.isArray(streamData[0])) {
             ln = streamData.length;
             for (i = 0; i < ln; i++) {
-              this.setupActionStream.apply(this, [$actionEl, action].concat(streamData[i]));
+              this.setupActionStream.apply(this, [$actionEl, action, streamPath].concat(streamData[i]));
             }
           } else {
-            this.setupActionStream.apply(this, [$actionEl, action].concat(streamData));
+            this.setupActionStream.apply(this, [$actionEl, action, streamPath].concat(streamData));
           }
         }
       }
@@ -276,9 +276,10 @@
       return prop;
     },
 
-    setupStream: function (streamData) {
-      var streamArgs = ['s:' + ProAct.Utils.uuid(), streamData],
-          args = Array.prototype.slice.call(arguments, 1);
+    setupStream: function (streamKey, streamData) {
+      var key = streamKey ? streamKey : ProAct.Utils.uuid(),
+          streamArgs = ['s:' + key, streamData],
+          args = Array.prototype.slice.call(arguments, 2);
 
       if (args.length) {
         streamArgs = streamArgs.concat(args);
@@ -287,7 +288,7 @@
       return this.registry.make.apply(this.registry, streamArgs);
     },
 
-    setupStreamWithDestination: function (streamData, destinationName, args) {
+    setupStreamWithDestination: function (streamData, destinationName, args, streamKey) {
       if (destinationName) {
         var destination = this.propFromPath(destinationName),
             dsl = P.U.isFunction(destination) ? '@' : '>>',
@@ -301,7 +302,7 @@
         args.push(destination);
       }
 
-      stream = this.setupStream.apply(this, [streamData].concat(args))
+      stream = this.setupStream.apply(this, [streamKey, streamData].concat(args))
       if (P.U.isArray(destination)) {
         this.multyStreams[destinationName] = stream;
       }
@@ -309,12 +310,16 @@
       return stream;
     },
 
-    setupActionStream: function ($actionEl, action, streamData, propertyName) {
+    setupActionStream: function ($actionEl, action, path, streamData, propertyName) {
       var view = this,
           args = Array.prototype.slice.call(arguments, 4),
-          stream;
+          stream, streamKey;
 
-      stream= this.setupStreamWithDestination(streamData, propertyName, args);
+      if (action.indexOf('.') !== -1) {
+        streamKey = (path + '-' + action).replace(/\./g, '-');
+      }
+
+      stream = this.setupStreamWithDestination(streamData, propertyName, args, streamKey);
 
       $actionEl.on(action + '.' + this.id, function (e) {
         e.proView = view;
