@@ -7,6 +7,9 @@
           safe ? $binding.html(view[property]) : $binding.text(view[property]);
         },
         onChange: ProAct.N
+      },
+      types = {
+        bind: setupBinding
       };
 
   function addBinding (binding) {
@@ -185,40 +188,30 @@
   function setup (view) {
     setupClasses(view);
 
-    var $bindings, type,
-        types = ProAct.Bindings.types;
+    var $bindings, type;
 
     for (type in types) {
-      $bindings = view.$el.find('[' + type + ']')
-                        .add(view.$el.filter('[' + type + ']')),
+      $bindings = view.$el.find('[pro-' + type + ']')
+                        .add(view.$el.filter('[pro-' + type + ']')),
       $bindings.each(function () {
         types[type].call(null, $(this), view);
       });
     }
   }
 
+  function addBindingType (name, operation) {
+    types[name] = operation;
+  }
+
   ProAct.Bindings = {
     addBinding : addBinding,
+    addInputBinding: addInputBinding,
     prepBinding : prepBinding,
     delBinding : delBinding,
+    addBindingType: addBindingType,
     onProp : onProp,
     onChange : onChange,
-    setup: setup,
-    types: {
-      'pro-bind': setupBinding
-    }
+    setup: setup
   };
-
-  // TODO to their own file!
-  addInputBinding({
-    type: 'checkbox',
-    prop: 'checked',
-    event: 'change'
-  });
-
-  addInputBinding({
-    prop: 'value',
-    event: 'keydown'
-  });
 
 })( window, ProAct );
