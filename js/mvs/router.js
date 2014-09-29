@@ -2,6 +2,10 @@
   'use strict';
 
   function Router (root) {
+    if (!root && window.location.pathname) {
+      root = window.location.pathname;
+    }
+
     this.root = root ? '/' + this.normalize(root) : '/';
     this.routes = [];
   };
