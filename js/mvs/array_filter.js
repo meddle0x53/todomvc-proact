@@ -2,7 +2,7 @@
   'use strict';
 
   ProAct.ArrayFilter = function (array, filter, registry, propertyPath) {
-    P.Observable.call(this);
+    P.Actor.call(this);
 
     if (!P.U.isProArray(array)) {
       array = new ProAct.Array(array);
@@ -30,7 +30,7 @@
     this.propertyPath = propertyPath;
   };
 
-  ProAct.ArrayFilter.prototype = P.U.ex(Object.create(P.Observable.prototype), {
+  ProAct.ArrayFilter.prototype = P.U.ex(Object.create(P.Actor.prototype), {
     constructor: ProAct.ArrayFilter,
 
     makeEvent: function (source) {

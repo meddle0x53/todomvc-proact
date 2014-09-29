@@ -2,11 +2,11 @@
 	'use strict';
 
   ProAct.Storage = ProAct.Storage || function () {
-    ProAct.Observable.call(this);
+    ProAct.Actor.call(this);
   };
   ProAct.Storage.currentCaller = null;
 
-  ProAct.Storage.prototype = ProAct.Utils.ex(Object.create(ProAct.Observable.prototype), {
+  ProAct.Storage.prototype = ProAct.Utils.ex(Object.create(ProAct.Actor.prototype), {
     constructor: ProAct.Storage,
 
     makeEvent: function (e) {
@@ -15,7 +15,7 @@
 
 	  defer: function (event, listener) {
 	    if (listener.property) {
-	      P.Observable.prototype.defer.call(this, event, listener);
+	      P.Actor.prototype.defer.call(this, event, listener);
 	      return;
 	    }
 	
