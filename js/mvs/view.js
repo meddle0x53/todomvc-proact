@@ -179,18 +179,21 @@
     render: function (model) {
       this.bindModel(model);
 
-      if (!this.setupElement()) {
-        return;
-      }
+      var view = this;
+      ProAct.flow.run(function () {
+        if (!view.setupElement()) {
+          return;
+        }
 
-      this.beforeRender(this.$el);
-      this.setupBindings();
-      this.setupStreams();
-      this.setupPipes();
+        view.beforeRender(view.$el);
+        view.setupBindings();
+        view.setupStreams();
+        view.setupPipes();
 
-      this.doRender();
+        view.doRender();
 
-      this.afterRender(this.$el);
+        view.afterRender(view.$el);
+      });
     },
 
     afterRender: function ($el) {
