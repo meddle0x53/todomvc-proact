@@ -21,7 +21,7 @@
     return app.views;
   };
 
-  app.router = new ProAct.Router('/labs/architecture-examples/proact/');
+  app.router = new ProAct.Router();
   app.router
     .route(function () {
       app.getTaskListView('l:truth');
