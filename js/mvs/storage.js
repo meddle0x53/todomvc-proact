@@ -27,9 +27,10 @@
 	  },
 
     create: function (model) {
-      this.update(model, [model.constructor.type ? model.constructor.type : model.constructor.uuid]);
-
+      var store = this;
       ProAct.flow.run(function () {
+        store.update(model, [model.constructor.type ? model.constructor.type : model.constructor.uuid]);
+
         model.isCreated = true;
         model.isSaved = true;
         model.isDestroyed = false;
@@ -47,14 +48,15 @@
       }
     },
     destroy: function (model) {
+      var store = this;
 
       ProAct.flow.run(function () {
         model.isCreated = false;
         model.isSaved = false;
         model.isDestroyed = true;
-      });
 
-      this.update(ProAct.Event.simple('array', 'del', model), [model.constructor.type ? model.constructor.type : model.constructor.uuid]);
+        store.update(ProAct.Event.simple('array', 'del', model), [model.constructor.type ? model.constructor.type : model.constructor.uuid]);
+      });
 
       return model;
     },
@@ -198,4 +200,4 @@
     },
   });
 
-})( window, ProAct );
+})(window, ProAct);
