@@ -11,6 +11,8 @@
 
     var ln = args.length;
     var currentArg = args.length + 1;
+    var destinationDsl;
+    var pipe;
 
     if (P.U.isString(source)) {
       source = actorFromPath(context, source, null);
@@ -18,7 +20,35 @@
     }
 
     meta = updateMeta(meta, '<<($' + currentArg + ')');
+    args.push(source);
+
+    if (P.U.isString(destination)) {
+      destination = actorFromPath(context, destination, null);
+
+      destinationDsl = P.U.isFunction(destination) ? '@' : '>>',
+    }
+
     currentArg += 1;
+    meta = updateMeta(meta, destinationDsl + '($' + currentArg + ')');
+    args.push(destination);
+
+    pipe = setupStream(context, null, meta, args);
+    if (P.U.isArray(destination)) {
+      context.multyStreams[destinationName] = stream;
+    }
+
+    return pipe;
+  }
+
+  function setupStream (context, streamKey, streamData, args) {
+    var key = streamKey ? streamKey : ProAct.Utils.uuid(),
+        streamArgs = ['s:' + key, streamData];
+
+    if (args.length) {
+      streamArgs = streamArgs.concat(args);
+    }
+
+    return context.registry.make.apply(context.registry, streamArgs);
   }
 
   function updateMeta(meta, metaFragment) {
