@@ -1,6 +1,7 @@
 (function( window, $, ProAct ) {
   'use strict';
 
+  // TODO Needs A spec.
   function makePipe (context, source, destination, meta, args) {
     if (!meta) {
       meta = '';
