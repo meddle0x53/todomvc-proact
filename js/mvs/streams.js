@@ -1,8 +1,7 @@
 (function( window, $, ProAct ) {
   'use strict';
 
-  // TODO Needs A spec.
-  function makePipe (context, source, destination, meta, args) {
+  function makePipe (source, destination, context, meta, args) {
     if (!meta) {
       meta = '';
     }
@@ -25,16 +24,15 @@
 
     if (P.U.isString(destination)) {
       destination = actorFromPath(context, destination, null);
-
-      destinationDsl = P.U.isFunction(destination) ? '@' : '>>',
     }
+    destinationDsl = P.U.isFunction(destination) ? '@' : '>>';
 
     currentArg += 1;
     meta = updateMeta(meta, destinationDsl + '($' + currentArg + ')');
     args.push(destination);
 
     pipe = setupStream(context, null, meta, args);
-    if (P.U.isArray(destination)) {
+    if (context && P.U.isArray(destination)) {
       context.multyStreams[destinationName] = stream;
     }
 
@@ -43,13 +41,20 @@
 
   function setupStream (context, streamKey, streamData, args) {
     var key = streamKey ? streamKey : ProAct.Utils.uuid(),
-        streamArgs = ['s:' + key, streamData];
+        streamArgs = ['s:' + key, streamData],
+        registry;
 
     if (args.length) {
       streamArgs = streamArgs.concat(args);
     }
 
-    return context.registry.make.apply(context.registry, streamArgs);
+    if (!(context && context.registry)) {
+      registry = ProAct.registry;
+    } else {
+      registry = context.registry;
+    }
+
+    return registry.make.apply(registry, streamArgs);
   }
 
   function updateMeta(meta, metaFragment) {
@@ -99,7 +104,10 @@
     // Last part of the path found - so and the last actor.
     path = paths[i];
     prev = actor;
-    actor = actor.p(path);
+
+    if (actor) {
+      actor = actor.p(path);
+    }
 
     // It is possible to have action instead of actor.
     // So the function is returned but bound to its context (which is actor).
@@ -113,11 +121,20 @@
 
     // Same as the above but the action is part of the context's registered lambdas.
     if (!actor && path.indexOf('l:') === 0) {
-      method = context.regRead(path);
-      if (method) {
-        prev = prev[method] ? prev : context;
+      if (context) {
+        method = context.regRead(path);
+      } else {
+        method = ProAct.registry.get(path);
+      }
 
-        return P.U.bind(prev, context.regRead(path));
+      if (method) {
+        if (prev) {
+          prev = prev[method] ? prev : context;
+
+          return P.U.bind(prev, method);
+        } else {
+          return method;
+        }
       }
     }
 
@@ -140,5 +157,9 @@
 
     return actor;
   }
+
+  ProAct.Streams = {
+    makePipe: makePipe
+  };
 
 })( window, $, ProAct);
