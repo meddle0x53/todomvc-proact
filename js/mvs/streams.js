@@ -69,16 +69,8 @@
     return new ProAct.ArrayFilter(array, filter, context.registry, path);
   }
 
-  function allArrayActors (array, paths) {
-    var i, ln = array.length,
-        props = [],
-        path = paths.join('.');
-
-    for (i = 0; i < ln; i++) {
-      props.push(propFromPath(path, array[i]))
-    }
-
-    return props;
+  function allArrayActors (context, actor, path) {
+    return arrayFilter(context, actor, function () {return true;}, path);
   }
 
   function actorFromPath (context, path, obj) {
@@ -92,7 +84,7 @@
       // If the current path is '[]' -> it means the properties from the whole array.
       // So someArray[].stuff -> will retrieve an array of the all stuff actors.
       if (path === '[]') {
-        return allArrayActors(actor._array, paths.slice(i + 1));
+        return allArrayActors(context, actor, paths.slice(i + 1));
       // If the current path is '[filter]' -> the actor is a new ArrayFilter with the filter.
       } else if (path.charAt(0) === '[' && path.charAt(path.length - 1) === ']') {
         return arrayFilter(context, actor, path.substring(1, path.length - 1), paths.slice(i + 1).join('.'));
