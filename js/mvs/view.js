@@ -122,32 +122,7 @@
     },
 
     setupPipes: function () {
-      var pipes = this.pipes,
-          pipeData, pipeStreamData, pipeDataLn, pipeArgs,
-          prop, p, i, ln,
-          destination, stream;
-
-      ln = pipes.length;
-      for (i = 0; i < ln; i++) {
-        pipeData = pipes[i];
-
-        pipeDataLn = pipeData.length;
-
-        if (pipeDataLn > 2) {
-          p = pipeDataLn - 3;
-
-          pipeStreamData = pipeData[1] + '|<<($' + (p + 1) + ')';
-          pipeArgs = pipeData.slice(3);
-
-          prop = this.propFromPath(pipeData[0]);
-          pipeArgs.push(prop);
-
-          this.setupStreamWithDestination(pipeStreamData, pipeData[2], pipeArgs);
-
-          // sync
-          prop.update(prop.makeEvent());
-        }
-      }
+      ProAct.Streams.setupPipes(this, this.pipes);
     },
 
     beforeRender: function ($el) {

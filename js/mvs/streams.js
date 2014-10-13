@@ -1,7 +1,18 @@
 (function( window, $, ProAct ) {
   'use strict';
 
-  function makePipe (source, destination, context, meta, args) {
+  function setupPipes (context, pipeDefinitions) {
+    var pipeData, pipeArgs,
+        i, ln = pipeDefinitions.length;
+
+    for (i = 0; i < ln; i++) {
+      pipeData = pipeDefinitions[i];
+      pipeArgs = pipeData.slice(3);
+      ProAct.Streams.make(pipeData[0], pipeData[2], context, pipeData[1], pipeArgs);
+    }
+  }
+
+  function make (source, destination, context, meta, args) {
     if (!meta) {
       meta = '';
     }
@@ -10,33 +21,42 @@
     }
 
     var ln = args.length;
-    var currentArg = args.length + 1;
+    var currentArg = args.length;
     var destinationDsl;
-    var pipe;
+    var stream;
 
-    if (P.U.isString(source)) {
-      source = actorFromPath(context, source, null);
-      // TODO Throw an error if source is not ProAct.Actor
+    if (source) {
+      currentArg += 1;
+      if (P.U.isString(source)) {
+        source = actorFromPath(context, source, null);
+        // TODO Throw an error if source is not ProAct.Actor
+      }
+
+      meta = updateMeta(meta, '<<($' + currentArg + ')');
+      args.push(source);
     }
 
-    meta = updateMeta(meta, '<<($' + currentArg + ')');
-    args.push(source);
+    if (destination) {
+      if (P.U.isString(destination)) {
+        destination = actorFromPath(context, destination, null);
+      }
+      destinationDsl = P.U.isFunction(destination) ? '@' : '>>';
 
-    if (P.U.isString(destination)) {
-      destination = actorFromPath(context, destination, null);
+      currentArg += 1;
+      meta = updateMeta(meta, destinationDsl + '($' + currentArg + ')');
+      args.push(destination);
     }
-    destinationDsl = P.U.isFunction(destination) ? '@' : '>>';
 
-    currentArg += 1;
-    meta = updateMeta(meta, destinationDsl + '($' + currentArg + ')');
-    args.push(destination);
-
-    pipe = setupStream(context, null, meta, args);
-    if (context && P.U.isArray(destination)) {
+    stream = setupStream(context, null, meta, args);
+    if (context && destination && P.U.isArray(destination)) {
       context.multyStreams[destinationName] = stream;
     }
 
-    return pipe;
+    if (source) {
+      source.update(source.makeEvent());
+    }
+
+    return stream;
   }
 
   function setupStream (context, streamKey, streamData, args) {
@@ -151,7 +171,8 @@
   }
 
   ProAct.Streams = {
-    makePipe: makePipe
+    make: make,
+    setupPipes: setupPipes
   };
 
 })( window, $, ProAct);

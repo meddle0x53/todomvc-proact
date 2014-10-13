@@ -68,7 +68,7 @@
         var self = this, listener = this.core.makeListener();
         this.modelListener = function () {
           self.core.off(self.storageListener);
-          listener.apply(null, arguments);
+          listener.call.apply(null, arguments);
           self.core.on(self.storageListener);
         };
       }
