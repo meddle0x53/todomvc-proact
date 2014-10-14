@@ -101,24 +101,7 @@
     },
 
     setupStreams: function () {
-      var streams = this.streams,
-          streamPath, action, $actionEl,
-          streamData, i, ln;
-
-      for (streamPath in streams) {
-        $actionEl = this.$el.find(streamPath)
-        for (action in streams[streamPath]) {
-          streamData = streams[streamPath][action];
-          if (ProAct.Utils.isArray(streamData[0])) {
-            ln = streamData.length;
-            for (i = 0; i < ln; i++) {
-              this.setupActionStream.apply(this, [$actionEl, action, streamPath].concat(streamData[i]));
-            }
-          } else {
-            this.setupActionStream.apply(this, [$actionEl, action, streamPath].concat(streamData));
-          }
-        }
-      }
+      ProAct.Streams.setupActionStreams(this, this.$el, this.streams);
     },
 
     setupPipes: function () {
@@ -146,11 +129,6 @@
       }
     },
 
-    destroy: function () {
-      // TODO Real destroy here!
-      this.$el.remove();
-    },
-
     render: function (model) {
       this.bindModel(model);
 
@@ -161,6 +139,7 @@
         }
 
         view.beforeRender(view.$el);
+
         view.setupBindings();
         view.setupStreams();
         view.setupPipes();
@@ -174,22 +153,6 @@
     afterRender: function ($el) {
     },
 
-    allArrayProps: function (array, paths) {
-      var i, ln = array.length,
-          props = [],
-          path = paths.join('.');
-
-      for (i = 0; i < ln; i++) {
-        props.push(this.propFromPath(path, array[i]))
-      }
-
-      return props;
-    },
-
-    arrayFilter: function (array, filter, path) {
-      return new ProAct.ArrayFilter(array, filter, this.registry, path);
-    },
-
     regRead: function (key) {
       var val = this.registry.get(key);
       if (!val && ProAct.registry) {
@@ -199,113 +162,11 @@
       return val;
     },
 
-    propFromPath: function (path, obj) {
-      var prop = obj ? obj : this, i,
-          paths = path.split('.'),
-          ln = paths.length - 1,
-          path, prev, method;
-
-      for (i = 0; i < ln; i++) {
-        path = paths[i];
-        if (path === '[]') {
-          return this.allArrayProps(prop._array, paths.slice(i + 1));
-        } else if (path.charAt(0) === '[' && path.charAt(path.length - 1) === ']') {
-          return this.arrayFilter(prop, path.substring(1, path.length - 1), paths.slice(i + 1).join('.'));
-        }
-
-        prop = prop[path];
-      }
-      path = paths[i];
-      prev = prop;
-      prop = prop.p(path);
-
-      if (!prop && path.indexOf('do') === 0) {
-        path = path.toLowerCase().substring(2);
-        method = prev[path];
-        if (method && P.U.isFunction(method)) {
-          return P.U.bind(prev, method);
-        }
-      }
-
-      if (!prop && path.indexOf('l:') === 0) {
-        method = this.regRead(path);
-        if (method) {
-          prev = prev[method] ? prev : this;
-
-          return P.U.bind(prev, this.regRead(path));
-        }
-      }
-
-      if (prop.type && (prop.type() === ProAct.Property.Types.array)) {
-        prop = prop.get().core;
-      }
-
-      if (prop.type && (prop.type() === ProAct.Property.Types.auto)) {
-        if (P.U.isProArray(prop.get())) {
-          prop = prop.get().core;
-        }
-      }
-
-      if (prop.target) {
-        prop = prop.target;
-      }
-
-
-      return prop;
-    },
-
-    setupStream: function (streamKey, streamData) {
-      var key = streamKey ? streamKey : ProAct.Utils.uuid(),
-          streamArgs = ['s:' + key, streamData],
-          args = Array.prototype.slice.call(arguments, 2);
-
-      if (args.length) {
-        streamArgs = streamArgs.concat(args);
-      }
-
-      return this.registry.make.apply(this.registry, streamArgs);
-    },
-
-    setupStreamWithDestination: function (streamData, destinationName, args, streamKey) {
-      if (destinationName) {
-        var destination = this.propFromPath(destinationName),
-            dsl = P.U.isFunction(destination) ? '@' : '>>',
-            stream;
-
-        if (streamData) {
-          streamData += '|';
-        }
-
-        streamData +=  dsl + '($' + (args.length + 1) + ')'
-        args.push(destination);
-      }
-
-      stream = this.setupStream.apply(this, [streamKey, streamData].concat(args))
-      if (P.U.isArray(destination)) {
-        this.multyStreams[destinationName] = stream;
-      }
-
-      return stream;
-    },
-
-    setupActionStream: function ($actionEl, action, path, streamData, propertyName) {
-      var view = this,
-          args = Array.prototype.slice.call(arguments, 4),
-          stream, streamKey;
-
-      if (action.indexOf('.') !== -1) {
-        streamKey = (path + '-' + action).replace(/\./g, '-');
-      }
-
-      stream = this.setupStreamWithDestination(streamData, propertyName, args, streamKey);
-
-      $actionEl.on(action + '.' + this.id, function (e) {
-        e.proView = view;
-        stream.trigger(e);
-      });
-
-      return stream;
+    destroy: function () {
+      // TODO Real destroy here!
+      this.$el.remove();
     }
+
   };
 
 })( window, $, ProAct);

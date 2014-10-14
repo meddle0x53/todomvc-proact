@@ -12,7 +12,27 @@
     }
   }
 
-  function make (source, destination, context, meta, args) {
+  function setupActionStreams (context, $el, streamDefinitions) {
+    var streamPath, action, $actionEl,
+        streamData, i, ln;
+
+    for (streamPath in streamDefinitions) {
+      $actionEl = $el.find(streamPath)
+      for (action in streamDefinitions[streamPath]) {
+        streamData = streamDefinitions[streamPath][action];
+        if (ProAct.Utils.isArray(streamData[0])) {
+          ln = streamData.length;
+          for (i = 0; i < ln; i++) {
+            makeAction.apply(null, [context, $actionEl, action, streamPath].concat(streamData[i]));
+          }
+        } else {
+          makeAction.apply(null, [context, $actionEl, action, streamPath].concat(streamData));
+        }
+      }
+    }
+  }
+
+  function make (source, destination, context, meta, args, streamKey) {
     if (!meta) {
       meta = '';
     }
@@ -47,7 +67,7 @@
       args.push(destination);
     }
 
-    stream = setupStream(context, null, meta, args);
+    stream = setupStream(context, streamKey, meta, args);
     if (context && destination && P.U.isArray(destination)) {
       context.multyStreams[destinationName] = stream;
     }
@@ -55,6 +75,26 @@
     if (source) {
       source.update(source.makeEvent());
     }
+
+    return stream;
+  }
+
+
+  function makeAction (context, $actionEl, action, path, streamData, propertyName) {
+    var args = Array.prototype.slice.call(arguments, 5),
+        stream, streamKey;
+
+    if (action.indexOf('.') !== -1) {
+      streamKey = (path + '-' + action).replace(/\./g, '-');
+    }
+
+    stream = make(null, propertyName, context, streamData, args, streamKey);
+
+    $actionEl.on(action + '.' + context.id, function (e) {
+      // TODO rename to proContext
+      e.proView = context;
+      stream.trigger(e);
+    });
 
     return stream;
   }
@@ -172,7 +212,9 @@
 
   ProAct.Streams = {
     make: make,
-    setupPipes: setupPipes
+    makeAction: makeAction,
+    setupPipes: setupPipes,
+    setupActionStreams: setupActionStreams
   };
 
 })( window, $, ProAct);

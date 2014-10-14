@@ -60,18 +60,6 @@
 
         child.render(childModel)
         this.children[childModel.uuid()] = child;
-
-        for (path in this.multyStreams) {
-          if (path.indexOf('models.[].') !== 1) {
-            stream = this.multyStreams[path];
-            path = path.substring(path.indexOf('models.[].') + 10);
-            prop = this.propFromPath(path, childModel);
-
-            if (prop.sources.indexOf(stream) === -1) {
-              stream.out(prop);
-            }
-          }
-        }
       }
     },
 
