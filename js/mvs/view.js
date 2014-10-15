@@ -24,6 +24,7 @@
   ProAct.View.idNumber = 1;
 
   ProAct.View.extend = ProAct.Utils.extendClass;
+  ProAct.View.include = ProAct.Mixins.include;
 
   ProAct.View.prototype = {
     constructor: ProAct.View,
@@ -36,20 +37,10 @@
         ProAct.View.idNumber = ProAct.View.idNumber + 1;
       }
 
-      var streamProvider = new P.R.StreamProvider(),
-          functionProvider = new P.R.FunctionProvider(),
-          proObjectProvider = new P.R.ProObjectProvider(),
-          lambda;
-
-      this.registry = new ProAct.Registry()
-        .register('s', streamProvider)
-        .register('po', proObjectProvider)
-        .register('obj', proObjectProvider)
-        .register('f', functionProvider)
-        .register('l', functionProvider);
+      var lambda;
 
       for (lambda in this.lambdas) {
-        this.registry.store('l:' + lambda, this.lambdas[lambda]);
+        this.reg().store('l:' + lambda, this.lambdas[lambda]);
       }
     },
 
@@ -153,20 +144,13 @@
     afterRender: function ($el) {
     },
 
-    regRead: function (key) {
-      var val = this.registry.get(key);
-      if (!val && ProAct.registry) {
-        val = ProAct.registry.get(key);
-      }
-
-      return val;
-    },
-
     destroy: function () {
       // TODO Real destroy here!
       this.$el.remove();
     }
 
   };
+
+  ProAct.View.include(ProAct.Mixins.RegistryStore);
 
 })( window, $, ProAct);

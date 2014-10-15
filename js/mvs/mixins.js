@@ -4,12 +4,13 @@
   function mixin (context) {
     var i, ln = arguments.length;
     for (i = 1; i < ln; i++) {
-      ex(context, arguments[i]);
+      ProAct.Utils.ex(context, arguments[i]);
     }
   }
 
   function include () {
-    mixin(this.prototype);
+    var args = Array.prototype.slice.call(arguments);
+    mixin.apply(this, [this.prototype].concat(args));
   }
 
   var RegistryStore = {
@@ -31,7 +32,7 @@
     },
 
     regRead: function (key) {
-      var val = this.registry().get(key);
+      var val = this.reg().get(key);
       if (!val && ProAct.registry) {
         val = ProAct.registry.get(key);
       }
