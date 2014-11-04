@@ -39,7 +39,10 @@
           childType: 'noprop',
           beforeRender: 'noprop',
           afterRender: 'noprop',
-          multyStreams: 'noprop'
+          multyStreams: 'noprop',
+          p: {
+            queueName: 'view'
+          }
         });
 
         this.models.load();

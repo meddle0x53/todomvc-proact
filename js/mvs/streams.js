@@ -79,7 +79,6 @@
     return stream;
   }
 
-
   function makeAction (context, $actionEl, action, path, streamData, propertyName) {
     var args = Array.prototype.slice.call(arguments, 5),
         stream, streamKey;

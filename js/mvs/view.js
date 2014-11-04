@@ -1,6 +1,8 @@
 (function( window, $, ProAct ) {
   'use strict';
 
+  ProAct.flow.addQueue('view');
+
   ProAct.View = ProAct.View || function (data) {
     ProAct.Utils.ex(this, this.constructor.initData);
     this.initialize(data);
@@ -56,7 +58,10 @@
           registry: 'noprop',
           template: 'noprop',
           beforeRender: 'noprop',
-          afterRender: 'noprop'
+          afterRender: 'noprop',
+          p: {
+            queueName: 'view'
+          }
         }, {});
 
         this.model = model;

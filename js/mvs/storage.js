@@ -1,6 +1,8 @@
 (function( window, ProAct ) {
 	'use strict';
 
+  ProAct.flow.addQueue('storage');
+
   ProAct.Storage = ProAct.Storage || function () {
     ProAct.Actor.call(this);
   };

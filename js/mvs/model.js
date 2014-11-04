@@ -1,6 +1,8 @@
 (function( window, ProAct ) {
   'use strict';
 
+  ProAct.flow.addQueue('model');
+
   ProAct.Model = ProAct.Model || function (data, storage) {
     ProAct.Utils.ex(this, this.constructor.initData);
     this.initialize(data, storage);
@@ -34,7 +36,11 @@
     initialize: function (data, storage) {
       ProAct.Utils.ex(this, data);
 
-      ProAct.prob(this);
+      ProAct.prob(this, {
+        p: {
+          queueName: 'model'
+        }
+      });
 
       this.storage = storage;
 
