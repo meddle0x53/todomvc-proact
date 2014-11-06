@@ -1,18 +1,11 @@
 (function(window, ProAct) {
 	'use strict';
 
-  var res = [];
   ProAct.flow.errStream().onErr(function (e) {
-    res.push(e);
+    ProAct.flow.pause();
+    throw e;
+    ProAct.flow.resume();
   });
-
-  setInterval(function () {
-    var m = res;
-    res = [];
-    for (var i = 0; i < m.length; i++) {
-      throw m[i];
-    }
-  }, 3000);
 
   window.app = window.app || {};
   var app = window.app;
