@@ -4,7 +4,7 @@
   ProAct.flow.addQueue('storage');
 
   ProAct.Storage = ProAct.Storage || function () {
-    ProAct.Actor.call(this);
+    ProAct.Actor.call(this, 'storage');
   };
   ProAct.Storage.currentCaller = null;
 
