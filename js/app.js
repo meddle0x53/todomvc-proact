@@ -2,9 +2,7 @@
 	'use strict';
 
   ProAct.flow.errStream().onErr(function (e) {
-    ProAct.flow.pause();
-    throw e;
-    ProAct.flow.resume();
+    console.log(e)
   });
 
   window.app = window.app || {};
