@@ -2,7 +2,7 @@
 	'use strict';
 
   ProAct.flow.errStream().onErr(function (e) {
-    console.log(e)
+    console.log(e);
   });
 
   window.app = window.app || {};
