@@ -56,7 +56,7 @@
     });
 
     // sync
-    view.p(property).update();
+    ProAct.ActorUtil.update.call(view.p(property));
   }
 
   function onChange ($binding, view, property) {

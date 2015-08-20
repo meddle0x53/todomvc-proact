@@ -31,7 +31,7 @@
     create: function (model) {
       var store = this;
       ProAct.flow.run(function () {
-        store.update(model, [model.constructor.type ? model.constructor.type : model.constructor.uuid]);
+        ProAct.ActorUtil.update.call(store, model, [model.constructor.type ? model.constructor.type : model.constructor.uuid]);
 
         model.isCreated = true;
         model.isSaved = true;
@@ -57,7 +57,7 @@
         model.isSaved = false;
         model.isDestroyed = true;
 
-        store.update(ProAct.Event.simple('array', 'del', model), [model.constructor.type ? model.constructor.type : model.constructor.uuid]);
+        ProAct.ActorUtil.update.call(store, ProAct.Event.simple('array', 'del', model), [model.constructor.type ? model.constructor.type : model.constructor.uuid]);
       });
 
       return model;

@@ -4,7 +4,7 @@
   ProAct.ArrayFilter = function (array, filter, registry, propertyPath) {
     P.Actor.call(this);
 
-    if (!P.U.isProArray(array)) {
+    if (!P.AU.isProArray(array)) {
       array = new ProAct.Array(array);
     }
 
@@ -51,7 +51,7 @@
             }
           });
 
-          filter.update(event);
+          ProAct.ActorUtil.update.call(filter, event);
           filter.listeners.change = [];
         };
       }

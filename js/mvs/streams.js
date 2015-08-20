@@ -73,7 +73,7 @@
     }
 
     if (source) {
-      source.update(source.makeEvent());
+      ProAct.ActorUtil.update.call(source, source.makeEvent());
     }
 
     return stream;
@@ -196,7 +196,7 @@
 
     // If the actor is an AutoProperty containing array -> we work with the array.
     if (actor.type && (actor.type() === ProAct.Property.Types.auto)) {
-      if (P.U.isProArray(actor.get())) {
+      if (P.AU.isProArray(actor.get())) {
         actor = actor.get().core;
       }
     }
